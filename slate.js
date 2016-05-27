@@ -185,8 +185,8 @@ slate.bind("a:ctrl,alt,cmd", slate.operation("layout", {
 }));
 
 
-//slate.default(["0X0","2880x1800","1080x1920","1920x1080"], fourMonitorLayout);
-slate.default(4, fourMonitorLayout);
+
+slate.default(6, fourMonitorLayout);
 
 if(slate.screenCount() == 4){
   slate.operation("layout", {
