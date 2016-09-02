@@ -1,7 +1,13 @@
-(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-			 ("marmalade" . "https://marmalade-repo.org/packages/")
-			 ("melpa" . "http://melpa.org/packages/")))
+(require 'package)
+(setq package-enable-at-startup nil)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(package-initialize)
 
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 
 ;;add ternjs to emacs
 (add-to-list 'load-path "~/Development/util/tern/emacs/")
@@ -53,3 +59,12 @@
  (autoload 'whitespace-mode           "whitespace" "Toggle whitespace visualization."        t)
 
 (setq-default indent-tabs-mode nil)
+
+
+(use-package magit
+             :ensure t)
+(use-package helm
+  :ensure t
+  :bind(:map helm-mode-map
+       ("C-c h" . helm-execute-persistent-action)))
+
