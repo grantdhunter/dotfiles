@@ -13,6 +13,26 @@ var rightHalf = slate.operation("move", {
 });
 
 
+var topThird = slate.operation("move", {
+    x: "screenOriginX",
+    y: "screenOriginY",
+    width: "screenSizeX",
+    height: "screenSizeY/3"
+});
+
+var middleThird = slate.operation("move", {
+    x: "screenOriginX",
+    y: "screenOriginY+screenSizeY/3",
+    width: "screenSizeX",
+    height: "screenSizeY/3"
+});
+var bottomThird = slate.operation("move", {
+    x: "screenOriginX",
+    y: "screenOriginY+screenSizeY*0.66666",
+    width: "screenSizeX",
+    height: "screenSizeY/3"
+
+});
 var topHalf = slate.operation("move", {
     x: "screenOriginX",
     y: "screenOriginY",
@@ -60,12 +80,15 @@ function googleChromeLayout(windowObject) {
     var title = windowObject.title();
     slate.log(title);
     if (title !== undefined && title.match(/^Grafana.+$/)) {
-        windowObject.doOperation(moveScreen2);
+        windowObject.doOperation(moveScreen1);
         windowObject.doOperation(full);
+    }else if (title !== undefined && title.match(/Google Play Music.+$/)) {
+        windowObject.doOperation(moveScreen0);
+        windowObject.doOperation(middleThird);
     } else if (title !== undefined && title == "Postman") {
         //do nothing
     } else {
-        windowObject.doOperation(moveScreen5);
+        windowObject.doOperation(moveScreen1);
         windowObject.doOperation(full);
     }
 }
@@ -75,6 +98,27 @@ slate.bind("down:cmd,alt", function (win) {
         return;
     }
     win.doOperation(bottomHalf);
+});
+
+
+slate.bind("up:cmd,ctrl", function (win) {
+    if (!win) {
+        return;
+    }
+    win.doOperation(topThird);
+});
+slate.bind("down:cmd,ctrl", function (win) {
+    if (!win) {
+        return;
+    }
+    win.doOperation(bottomThird);
+});
+
+slate.bind("m:cmd,ctrl", function (win) {
+    if (!win) {
+        return;
+    }
+    win.doOperation(middleThird);
 });
 
 
@@ -180,21 +224,17 @@ var screen4Full = slate.operation("move", {
     height: "screenSizeY",
     screen: "4"
 });
-var sixMonitorLayout = slate.layout("sixMonitor", {
+
+
+var threeMonitorLayout= slate.layout("threeMonitor", {
     "Slack": {
-        "operations": [moveScreen0, topHalf],
-        "main-first": true,
-        "ignore-fail": true,
-        "repeat": true
-    },
-    "HipChat": {
-        "operations": [moveScreen0, topHalf],
+        "operations": [moveScreen0, topThird],
         "main-first": true,
         "ignore-fail": true,
         "repeat": true
     },
     "Microsoft Outlook": {
-        "operations": [screen0Bottom],
+        "operations": [moveScreen0, bottomThird],
         "main-first": true,
         "ignore-fail": true,
         "repeat": true
@@ -211,30 +251,31 @@ var sixMonitorLayout = slate.layout("sixMonitor", {
         "ignore-fail": true
     },
     "PyCharm": {
-        "operations": [screen3Full],
+        "operations": [moveScreen2, full],
         "main-first": true,
         "ignore-fail": true,
         "repeat": true
     },
     "WebStorm": {
-        "operations": [screen4Full],
+        "operations": [moveScreen2, full],
         "main-first": true,
         "ignore-fail": true,
         "repeat": true
     }
 });
 
+
 slate.bind("a:ctrl,alt,cmd", slate.operation("layout", {
-    name: sixMonitorLayout
+    name: threeMonitorLayout
 }));
 
 
 
-slate.default(6, sixMonitorLayout);
+slate.default(3, threeMonitorLayout);
 
-if (slate.screenCount() == 6) {
+if (slate.screenCount() == 3) {
     slate.operation("layout", {
-        name: sixMonitorLayout
+        name: threeMonitorLayout
     }).run();
 }
 
