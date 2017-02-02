@@ -1,0 +1,13 @@
+ZSH_THEME="zhann"
+
+plugins=(git  mercurial)
+
+source $ZSH/oh-my-zsh.sh
+
+setopt noincappendhistory
+setopt nosharehistory
+
+export EDITOR=emacs
+
+
+alias ls='ls -Galp'

@@ -100,7 +100,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (go-mode jq-mode web-beautify use-package tern-auto-complete rustfmt racer neotree magit json-reformat js2-highlight-vars jedi helm flymake-rust flycheck-rust csharp-mode company-jedi cargo))))
+    (swift-mode swift3-mode go-mode jq-mode web-beautify use-package tern-auto-complete rustfmt racer neotree magit json-reformat js2-highlight-vars jedi helm flymake-rust flycheck-rust csharp-mode company-jedi cargo))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
