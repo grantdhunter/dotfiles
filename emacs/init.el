@@ -9,10 +9,29 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+(use-package async
+	     :config
+	     (defun my/init-hook ()
+	           "If the current buffer is 'emacs-init.org' the code-blocks
+are tangled."
+		   (when (equal (buffer-file-name) my-org-file)
+		     (async-start
+		      `(lambda ()
+			 (require 'org)
+			 (org-babel-tangle-file ,my-org-file))
+		      (lambda (result)
+			(message "Tangled file compiled.")))))
+	     (add-hook 'after-save-hook 'my/init-hook))
 
-(autoload 'dired-async-mode "dired-async.el" nil t)
-(dired-async-mode 1)
-(async-bytecomp-package-mode 1)
+(use-package dired-async
+	     :after async
+	     :config
+	     (dired-async-mode 1)
+	     (async-bytecomp-package-mode 1)
+	     )
+
+
+
 
 ;;add ternjs to emacs
 (add-to-list 'load-path "~/Development/util/tern/emacs/")
