@@ -10,19 +10,7 @@
   (package-install 'use-package))
 
 (use-package async
-	     :config
-	     (defun my/init-hook ()
-	           "If the current buffer is 'emacs-init.org' the code-blocks
-are tangled."
-		   (when (equal (buffer-file-name) my-org-file)
-		     (async-start
-		      `(lambda ()
-			 (require 'org)
-			 (org-babel-tangle-file ,my-org-file))
-		      (lambda (result)
-			(message "Tangled file compiled.")))))
-	     (add-hook 'after-save-hook 'my/init-hook))
-
+	     :ensure t)
 (use-package dired-async
 	     :after async
 	     :config
@@ -31,6 +19,9 @@ are tangled."
 	     )
 
 
+(if (display-graphic-p)
+    (load-theme 'ubuntu t)
+)
 
 
 ;;add ternjs to emacs
@@ -52,8 +43,18 @@ are tangled."
 (global-set-key (kbd "C-x p") 'previous-multiframe-window)
 (put 'downcase-region 'disabled nil)
 
+;;undo
+(global-set-key (kbd "C--") 'undo)
+
+(global-set-key (kbd "s--") 'text-scale-decrease)
+(global-set-key (kbd "s-=") 'text-scale-increase)
+
 ;;neotree
-(global-set-key [f8] 'neotree-toggle)
+(use-package neotree
+  :ensure t
+  :bind("<f8>" .  neotree-toggle)
+)
+
 
 ;;Rust
 (setq racer-cmd "/usr/local/bin/racer")
@@ -117,6 +118,9 @@ are tangled."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   (quote
+    ("3d5307e5d6eb221ce17b0c952aa4cf65dbb3fa4a360e12a71e03aab78e0176c5" default)))
  '(package-selected-packages
    (quote
     (swift-mode swift3-mode go-mode jq-mode web-beautify use-package tern-auto-complete rustfmt racer neotree magit json-reformat js2-highlight-vars jedi helm flymake-rust flycheck-rust csharp-mode company-jedi cargo))))
@@ -125,4 +129,4 @@ are tangled."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(font-lock-string-face ((t (:foreground "magenta")))))
