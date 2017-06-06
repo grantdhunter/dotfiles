@@ -79,6 +79,8 @@
   :ensure t  
   :bind("<C-tab>" . company-auto-complete))
 (setq company-tooltip-align-annotations t)
+(setq company-dabbrev-downcase 0)
+(setq company-idle-delay 0)
 
 
 
