@@ -22,7 +22,7 @@
 (if (display-graphic-p)
     (load-theme 'ubuntu t)
 )
-
+(setq inhibit-startup-screen t)
 
 ;;add ternjs to emacs
 (add-to-list 'load-path "~/Development/util/tern/emacs/")
