@@ -20,12 +20,16 @@
 
 
 (if (display-graphic-p)
-    (load-theme 'ubuntu t)
+
+    (if (string-equal system-type "darwin")
+        (setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin"))
+        (load-theme 'ubuntu t)
+    )
 )
 (setq inhibit-startup-screen t)
 
 ;;add ternjs to emacs
-(add-to-list 'load-path "~/Development/util/tern/emacs/")
+(add-to-list 'load-path "~/DevelopmentUtils/tern/emacs/")
 (autoload 'tern-mode "tern.el" nil t)
 
 ;;auto load tern with .js files
@@ -74,14 +78,24 @@
 
 (add-hook 'flycheck-mode-hook #'flycheck-rust-setup)
 
-;;(global-set-key (kbd "TAB") #'company-indent-or-complete-common)
+;;Python
+
+;;autocomplete
 (use-package company
-  :ensure t  
-  :bind("<C-tab>" . company-auto-complete))
+  :ensure t  )
 (setq company-tooltip-align-annotations t)
+
+(add-hook 'after-init-hook 'global-company-mode)
+(eval-after-load "company"
+ '(add-to-list 'company-backends 'company-anaconda))
+
+
 (setq company-dabbrev-downcase 0)
 (setq company-idle-delay 0)
+(setq company-minimum-prefix-length 2)
 
+(use-package py-autopep8
+  :ensure t)
 
 
 ;;white space
@@ -125,7 +139,7 @@
     ("3d5307e5d6eb221ce17b0c952aa4cf65dbb3fa4a360e12a71e03aab78e0176c5" default)))
  '(package-selected-packages
    (quote
-    (swift-mode swift3-mode go-mode jq-mode web-beautify use-package tern-auto-complete rustfmt racer neotree magit json-reformat js2-highlight-vars jedi helm flymake-rust flycheck-rust csharp-mode company-jedi cargo))))
+    (ubuntu-theme py-autopep8 hide-comnt terraform-mode helm-projectile 0blayout jinja2-mode company-anaconda yaml-mode markdown-mode markdown-mode+ markdownfmt swift-mode swift3-mode go-mode jq-mode web-beautify use-package tern-auto-complete rustfmt racer neotree magit json-reformat js2-highlight-vars jedi helm flymake-rust flycheck-rust csharp-mode company-jedi cargo))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
