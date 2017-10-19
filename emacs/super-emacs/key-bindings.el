@@ -14,6 +14,7 @@
     ("C-x C-b" . helm-buffers-list)
     ("C-x C-f" . helm-find-files)
     ("C-x C-r" . helm-recentf)
+    ("C-c p h" . helm-projectile)
     ("M-y" . helm-show-kill-ring)
     ("C-;" . ace-window)
     ("C-S-<up>" . buf-move-up)

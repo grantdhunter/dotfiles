@@ -21,8 +21,13 @@
     theme-looper
     magit
     rust-mode
+    yaml-mode
+    terraform-mode
+    terraform-company
     racer
     company
+    projectile
+    helm-projectile
     ))
 
 ;Install required packages
@@ -42,7 +47,7 @@
 (which-key-mode)
 
 ;Setup company-mode
-(setq company-dabbrev-downcase 0)
+(setq company-dabbrev-downcase nil)
 (setq company-idle-delay 0)
 (setq company-minimum-prefix-length 2)
 
