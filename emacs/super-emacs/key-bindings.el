@@ -26,6 +26,7 @@
     ("C-x p" . previous-multiframe-window)
     ("s--" . text-scale-decrease)
     ("s-=" . text-scale-increase)
+    ("C-c m" . magit-status)
     ))
 
 (defun super-emacs-apply-keyboard-bindings (pair)

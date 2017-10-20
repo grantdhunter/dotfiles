@@ -1,6 +1,6 @@
 ;Change title-bar text
 (setq frame-title-format
-      "super-emacs")
+      "%b %F")
 
 ;Disable menu-bar
 (menu-bar-mode -1)
@@ -18,3 +18,6 @@
 ;Set font
 (custom-set-faces
  '(default ((t (:height 120)))))
+
+;line numbers
+(linum-mode)
