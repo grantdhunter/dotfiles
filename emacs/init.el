@@ -22,7 +22,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (company-terraform terraform-mode yaml-mode company racer rust-mode magit theme-looper myterminal-controls meta-presenter which-key dired-launch material-theme neotree undo-tree ztree buffer-move powerline ace-window ace-jump-mode multiple-cursors helm))))
+    (helm-projectile projectile json-mode jinja2-mode company-terraform terraform-mode yaml-mode company racer rust-mode magit theme-looper myterminal-controls meta-presenter which-key dired-launch material-theme neotree undo-tree ztree buffer-move powerline ace-window ace-jump-mode multiple-cursors helm))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

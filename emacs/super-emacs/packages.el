@@ -22,8 +22,10 @@
     magit
     rust-mode
     yaml-mode
+    jinja2-mode
+    json-mode
     terraform-mode
-    terraform-company
+    company-terraform
     racer
     company
     projectile
@@ -50,6 +52,19 @@
 (setq company-dabbrev-downcase nil)
 (setq company-idle-delay 0)
 (setq company-minimum-prefix-length 2)
+
+(defvar company-mode-whitelist
+  '(
+    js-mode-hook
+    python-mode-hook
+    rust-mode-hook
+    lisp-mode-hook
+    terraform-mode-hook
+    ))
+
+(mapc (lambda (h)
+        (add-hook h #'company-mode))
+      company-mode-whitelist)
 
 
 ;Set up ace-jump-mode

@@ -27,6 +27,7 @@
     ("s--" . text-scale-decrease)
     ("s-=" . text-scale-increase)
     ("C-c m" . magit-status)
+    ("C-c g" . helm-projectile-grep)
     ))
 
 (defun super-emacs-apply-keyboard-bindings (pair)
