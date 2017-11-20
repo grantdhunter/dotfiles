@@ -28,6 +28,7 @@
     ("s-=" . text-scale-increase)
     ("C-c m" . magit-status)
     ("C-c g" . helm-projectile-grep)
+    ("C-c b" . helm-semantic-or-imenu)
     ))
 
 (defun super-emacs-apply-keyboard-bindings (pair)

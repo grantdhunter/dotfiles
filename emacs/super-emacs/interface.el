@@ -20,4 +20,4 @@
  '(default ((t (:height 120)))))
 
 ;line numbers
-(linum-mode)
+(global-linum-mode)
