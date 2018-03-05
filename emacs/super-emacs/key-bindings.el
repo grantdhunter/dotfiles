@@ -28,7 +28,9 @@
     ("s-=" . text-scale-increase)
     ("C-c m" . magit-status)
     ("C-c g" . helm-projectile-grep)
+    ("C-S-s" . helm-occur)
     ("C-c b" . helm-semantic-or-imenu)
+    ("C-c j" . helm-all-mark-rings)
     ))
 
 (defun super-emacs-apply-keyboard-bindings (pair)
@@ -38,3 +40,7 @@
 
 (mapc 'super-emacs-apply-keyboard-bindings
       super-emacs--my-keyboard-bindings)
+
+(add-hook 'python-mode-hook (lambda ()
+                           (local-set-key (kbd "C-c i") (lambda () (interactive) (
+                                                                   insert "import pdb; pdb.set_trace()")))))

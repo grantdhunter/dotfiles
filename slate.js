@@ -57,6 +57,11 @@ var topLeft = S.op("corner", {
     "width": "screenSizeX/2",
     "height": "screenSizeY/2"
 });
+var topLeftShort = S.op("corner", {
+    "direction": "top-left",
+    "width": "screenSizeX/2",
+    "height": "screenSizeY/4"
+});
 
 var topRight = S.op("corner", {
     "direction": "top-right",
@@ -68,6 +73,12 @@ var bottomLeft = S.op("corner", {
     "width": "screenSizeX/2",
     "height": "screenSizeY/2"
 });
+var bottomLeftTall = S.op("corner", {
+    "direction": "bottom-left",
+    "width": "screenSizeX/2",
+    "height": "screenSizeY*0.63"
+});
+
 var bottomRight = S.op("corner", {
     "direction": "bottom-right",
     "width": "screenSizeX/2",
@@ -147,7 +158,7 @@ var threeMonitorLayout = slate.layout("threeMonitor", {
     "Slack": {
         "operations": [function(wo) {
             wo.doOperation(moveScreen0);
-            wo.doOperation(topLeft);
+            wo.doOperation(topLeftShort);
         }],
         "main-first": true,
         "ignore-fail": true,
@@ -156,7 +167,7 @@ var threeMonitorLayout = slate.layout("threeMonitor", {
     "Microsoft Outlook": {
         "operations": [function(wo) {
             wo.doOperation(moveScreen0);
-            wo.doOperation(bottomLeft);
+            wo.doOperation(bottomLeftTall);
         }],
         "main-first": true,
         "ignore-fail": false,
@@ -198,6 +209,24 @@ var threeMonitorLayout = slate.layout("threeMonitor", {
         "operations": [function(wo) {
             wo.doOperation(moveScreen2);
             wo.doOperation(topHalf);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    },
+    "Emacs": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen2);
+            wo.doOperation(topHalf);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    },
+    "iTerm2": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen2);
+            wo.doOperation(bottomHalf);
         }],
         "main-first": true,
         "ignore-fail": true,

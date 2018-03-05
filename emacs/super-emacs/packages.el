@@ -122,12 +122,16 @@
                                                             "*.tar.gz"
                                                             "*.tgz"
                                                             "*.zip"
+                                                            "*.o"
                                                             )
                                                           projectile-globally-ignored-files))
                                             (setq projectile-globally-ignored-directories
                                                   (append '(
                                                             ".git"
                                                             ".svn"
+                                                            ".idea"
+                                                            ".vscode"
+                                                            "node_modules"
                                                             )
                                                           projectile-globally-ignored-directories))
                                             )))
@@ -139,4 +143,4 @@
 ;;   (add-to-list 'elpy-default-minor-modes 'flycheck-mode))
 
 ;;flycheck
-(setq flycheck-flake8-maximum-line-length 125)
+(setq flycheck-flake8-maximum-line-length 500)

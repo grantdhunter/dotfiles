@@ -6,8 +6,8 @@
         (t (message "You're not editing a file!"))))
 
 ;Disable splash message, start *scratch* buffer by default
-(setq initial-buffer-choice
-      t)
+(setq inhibit-startup-screen t
+      initial-buffer-choice  nil)
 (setq initial-scratch-message
       "")
 
@@ -20,7 +20,7 @@
 
 ;Enable whitespace mode
 (global-whitespace-mode)
- (setq whitespace-line-column 125)
+ (setq whitespace-line-column 500)
 
 ;Enable winner-mode
 (winner-mode t)
@@ -31,6 +31,8 @@
 ;;keep search highlight
 (setq lazy-highlight-cleanup nil)
 
+;turn off bell
+ (setq ring-bell-function 'ignore)
 
 
 ;;cleanup buffers
