@@ -1,6 +1,6 @@
 ;Change title-bar text
 (setq frame-title-format
-      "%b %F")
+      "%F %b ")
 
 ;Disable menu-bar
 (menu-bar-mode -1)
@@ -21,3 +21,11 @@
 
 ;line numbers
 (global-linum-mode)
+
+  ;; ITERM2 MOUSE SUPPORT
+(unless window-system
+  (require 'mouse)
+  (xterm-mouse-mode t)
+  (defun track-mouse (e))
+  (setq mouse-sel-mode t)
+  )

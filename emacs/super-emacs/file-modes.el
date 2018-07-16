@@ -4,10 +4,9 @@
 
 
 
-(defvar dwlisp-mode-hook nil)
-(add-to-list 'auto-mode-alist '("\\.lisp\\'" . dwlisp-mode))
 
-(define-derived-mode dwlisp-mode
-  lisp-mode "dwlisp"
-  "major mode for dwlisp"
-  (setq lisp-body-indent 2))
+(setq lisp-body-indent 2)
+
+;cc mode
+(setq c-default-style "linux"
+      c-basic-offset 4)

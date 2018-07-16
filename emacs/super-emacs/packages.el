@@ -56,27 +56,15 @@
 (setq company-minimum-prefix-length 2)
 
 (global-company-mode)
-;; (defvar company-mode-whitelist
-;;   '(
-;;     js-mode-hook
-;;     python-mode-hook
-;;     rust-mode-hook
-;;     lisp-mode-hook
-;;     terraform-mode-hook
-;;     org-mode-hook
-;;     ))
-;; (mapc (lambda (h)
-;;         (add-hook h #'company-mode))
-;;       company-mode-whitelist)
 
 
 ;Set up ace-jump-mode
-(autoload 'ace-jump-mode 
-  "ace-jump-mode" 
+(autoload 'ace-jump-mode
+  "ace-jump-mode"
   "Emacs quick move minor mode"
   t)
-(autoload 'ace-jump-mode-pop-mark 
-  "ace-jump-mode" 
+(autoload 'ace-jump-mode-pop-mark
+  "ace-jump-mode"
   "Ace jump back:-"
   t)
 
@@ -84,6 +72,7 @@
 (powerline-center-theme)
 (setq powerline-default-separator
       'slant)
+
 
 ;Configure theme-looper
 (theme-looper-set-theme-set '(deeper-blue
@@ -144,3 +133,10 @@
 
 ;;flycheck
 (setq flycheck-flake8-maximum-line-length 500)
+
+
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+
+(require 'semantic)
+(semantic-mode 1)
+(global-semantic-stickyfunc-mode 1)

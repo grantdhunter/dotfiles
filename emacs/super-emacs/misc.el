@@ -22,6 +22,7 @@
 (global-whitespace-mode)
  (setq whitespace-line-column 500)
 
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
 ;Enable winner-mode
 (winner-mode t)
 
@@ -70,3 +71,27 @@
 (setq clean-buffer-list-kill-never-regexps
       (append '("^\\*EMMS Playlist\\*.*$")
               clean-buffer-list-kill-never-regexps-init))
+
+
+;https://stackoverflow.com/questions/43765/pin-emacs-buffers-to-windows-for-cscope
+(defun toggle-window-dedicated ()
+
+"Toggle whether the current active window is dedicated or not"
+
+(interactive)
+
+(message
+
+ (if (let (window (get-buffer-window (current-buffer)))
+
+       (set-window-dedicated-p window
+
+        (not (window-dedicated-p window))))
+
+    "Window '%s' is dedicated"
+
+    "Window '%s' is normal")
+
+ (current-buffer)))
+
+(global-set-key (kbd "<f12>") 'toggle-window-dedicated)

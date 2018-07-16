@@ -52,6 +52,14 @@ var full = slate.operation("move", {
     width: "screenSizeX",
     height: "screenSizeY"
 });
+
+var fullDubble = slate.operation("move", {
+    x: "screenOriginX",
+    y: "screenOriginY",
+    width: "screenSizeX*2",
+    height: "screenSizeY"
+});
+
 var topLeft = S.op("corner", {
     "direction": "top-left",
     "width": "screenSizeX/2",
@@ -60,7 +68,7 @@ var topLeft = S.op("corner", {
 var topLeftShort = S.op("corner", {
     "direction": "top-left",
     "width": "screenSizeX/2",
-    "height": "screenSizeY/4"
+    "height": "screenSizeY*0.40"
 });
 
 var topRight = S.op("corner", {
@@ -76,7 +84,7 @@ var bottomLeft = S.op("corner", {
 var bottomLeftTall = S.op("corner", {
     "direction": "bottom-left",
     "width": "screenSizeX/2",
-    "height": "screenSizeY*0.63"
+    "height": "screenSizeY*0.6"
 });
 
 var bottomRight = S.op("corner", {
@@ -196,6 +204,14 @@ var threeMonitorLayout = slate.layout("threeMonitor", {
         "repeat": true,
         "ignore-fail": true
     },
+    "Firefox": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen1);
+            wo.doOperation(full);
+        }],
+        "repeat": true,
+        "ignore-fail": true
+    },
     "PyCharm Community Edition": {
         "operations": [function(wo) {
             wo.doOperation(moveScreen2);
@@ -234,10 +250,129 @@ var threeMonitorLayout = slate.layout("threeMonitor", {
     }
 });
 
+var fourMonitorLayout = slate.layout("fourMonitor", {
+    "Slack": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen0);
+            wo.doOperation(topLeftShort);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    },
+    "Microsoft Outlook": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen0);
+            wo.doOperation(bottomLeftTall);
+        }],
+        "main-first": true,
+        "ignore-fail": false,
+        "repeat": true
+    },
+    "Google Play Music Desktop Player": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen0);
+            wo.doOperation(bottomRight);
+        }],
+        "main-first": true,
+        "ignore-fail": false,
+        "repeat": true
+    },
+    "VMware Fusion": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen1);
+            wo.doOperation(full);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    },
+    "Google Chrome": {
+        "operations": [googleChromeLayout],
+        "repeat": true,
+        "ignore-fail": true
+    },
+    "Firefox": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen0);
+            wo.doOperation(full);
+        }],
+        "repeat": true,
+        "ignore-fail": true
+    },
+    "PyCharm Community Edition": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen2);
+            wo.doOperation(full);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    },
+    "WebStorm": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen2);
+            wo.doOperation(full);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    },
+     "Xcode": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen2);
+            wo.doOperation(full);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+     },
+     "Android Studio": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen2);
+            wo.doOperation(full);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    },
+    "Emacs": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen3);
+            wo.doOperation(full);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    },
+    "iTerm2": {
+        "operations": [function(wo) {
+            wo.doOperation(moveScreen1);
+            wo.doOperation(full);
+        }],
+        "main-first": true,
+        "ignore-fail": true,
+        "repeat": true
+    }
+});
 
-slate.bind("a:ctrl,alt,cmd", slate.operation("layout", {
-    name: threeMonitorLayout
-}));
+
+slate.bind("f:ctrl,cmd", fullDubble)
+
+slate.bind("a:ctrl,alt,cmd", function(wo){
+
+if (slate.screenCount() == 3) {
+    slate.operation("layout", {
+        name: threeMonitorLayout
+    }).run();
+}
+if (slate.screenCount() == 4) {
+    slate.operation("layout", {
+        name: fourMonitorLayout
+    }).run();
+}
+
+});
 
 
 
@@ -246,6 +381,11 @@ slate.default(3, threeMonitorLayout);
 if (slate.screenCount() == 3) {
     slate.operation("layout", {
         name: threeMonitorLayout
+    }).run();
+}
+if (slate.screenCount() == 4) {
+    slate.operation("layout", {
+        name: fourMonitorLayout
     }).run();
 }
 
