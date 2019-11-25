@@ -1,0 +1,11 @@
+(elpy-enable)
+(setq elpy-rpc-python-command "/usr/local/Cellar/python3/3.7.3/bin/python3")
+(setq python-shell-interpreter "/usr/local/Cellar/python3/3.7.3/bin/python3")
+(setq flycheck-python-pycompile-executable "/usr/local/Cellar/python3/3.7.3/bin/python3")
+(setq flycheck-python-flake8-executable "/usr/local/Cellar/python3/3.7.3/bin/python3")
+(setq flycheck-python-pylint-executable "/usr/local/Cellar/python3/3.7.3/bin/python3")
+
+(when (require 'flycheck nil t)
+  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+  (add-hook 'elpy-mode-hook 'flycheck-mode))
+(add-hook 'python-mode-hook 'importmagic-mode)
