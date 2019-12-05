@@ -7,15 +7,13 @@
 
 (show-paren-mode)
 
+(when window-system (progn
+                     (set-frame-size (selected-frame) 100 30)
+                     (menu-bar-mode -1)
+                     (tool-bar-mode -1)
+                     (scroll-bar-mode -1)
+                     ))
 
-(when (display-graphic-p)
-    (menu-bar-mode -1)
-    (tool-bar-mode -1)
-    (scroll-bar-mode -1))
-(display-graphic-p)
-    (menu-bar-mode -1)
-    (tool-bar-mode -1)
-    (scroll-bar-mode -1)
 
 (global-auto-revert-mode t)
 (global-linum-mode)

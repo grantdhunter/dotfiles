@@ -40,4 +40,4 @@
 
 ;; projectile
 (helm-projectile-on)
-(setq projectile-project-search-path '("~/Development/"))
+(setq projectile-project-search-path '("/c/development/"))

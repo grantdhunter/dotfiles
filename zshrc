@@ -102,10 +102,16 @@ source $ZSH/oh-my-zsh.sh
 setopt noincappendhistory
 setopt nosharehistory
 
-e() {emacs "$@" &; disown}
+e() {emacsclient -a "" -qc -n  "$@" &; disown}
 alias ec="emacsclient -qc -n"
 
 
 export DOCKER_HOST=tcp://localhost:2375
+export DISPLAY=localhost:0.0
 
 export PATH="$PATH:$HOME/.local/bin"
+export PATH="/home/ghunter/.pyenv/bin:$PATH"
+
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+source <(kubectl completion zsh)
