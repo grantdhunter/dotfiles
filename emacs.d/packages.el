@@ -2,42 +2,42 @@
 ;;; Commentary:
 
 ;;; Code:
-(require 'package)
 
-(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                         ("marmalade" . "https://marmalade-repo.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")))
-(defvar my-packages '(
-                      company
-                      company-terraform
-                      crux
-                      dumb-jump
-                      elpy
-                      exec-path-from-shell
-                      flycheck
-                      helm-projectile
-                      importmagic
-                      jinja2-mode
-                      json-mode
-                      magit
-                      material-theme
-                      multiple-cursors
-                      neotree
-                      powerline
-                      projectile
-                      racer
-                      rainbow-delimiters
-                      rust-mode
-                      terraform-mode
-                      toml-mode
-                      writegood-mode
-                      yaml-mode
-                      helm
-                      ))
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")))
+;; This is only needed once, near the top of the file
+(eval-when-compile
+  (require 'use-package))
 
-(dolist (p my-packages)
-  (unless (package-installed-p p)
-    (package-refresh-contents)
-    (package-install p))
-  (add-to-list 'package-selected-packages p))
+(use-package lsp-mode
+  :config
+  (add-hook 'js-mode-hook #'lsp)
+  (add-hook 'python-mode-hook #'lsp)
+  (add-hook 'rust-mode-hook #'lsp))
+
+(use-package lsp-company)
+(use-package lsp-helm)
+(use-package material-theme)
+(use-package multiple-cursors)
+(use-package neotree)
+(use-package powerline)
+(use-package projectile)
+(use-package flycheck)
+(use-package rainbow-delimiters)
+(use-package magit)
+
+
+
+
+(use-package toml-mode)
+(use-package rust-mode)
+(use-package terraform-mode)
+(use-package company-terraform)
+(use-package jinja2-mode)
+(use-package json-mode)
+
+
+(use-package yaml-mode)
+
+
+
 ;;; packages.el ends here

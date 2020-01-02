@@ -3,3 +3,7 @@ eshell/
 semanticdb/
 transient/
 recentf
+.cache/
+.lsp-session-v1
+auto-save-list/
+.mc-lists.el

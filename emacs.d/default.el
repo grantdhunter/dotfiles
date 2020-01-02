@@ -65,3 +65,6 @@
 ;;add path
 (add-to-list 'exec-path "/usr/local/bin")
 (add-to-list 'exec-path "~/.local/bin")
+
+
+`
