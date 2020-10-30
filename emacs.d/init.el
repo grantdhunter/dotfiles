@@ -3,18 +3,7 @@
 ;;   - All of the configuration is within `configuration.org`
 ;;; Code:
 
-
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
-
-
-
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
+(setq server-use-tcp t)
 (package-initialize)
 
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
@@ -28,14 +17,18 @@
 
 (use-package lsp-mode
   :ensure t
-  :hook (js-mode . lsp-deffered)
+  :hook (js-mode . lsp-deferred)
   :hook (python-mode . lsp-deferred)
   :hook (rust-mode . lsp-deferred)
   :commands lsp)
 
 (use-package lsp-ui
   :ensure t
-  :commands lsp-ui-mode)
+  :commands lsp-ui-mode
+  :config
+  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+  )
 (use-package company-lsp
     :ensure t
     :commands company-lsp
@@ -212,9 +205,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(flycheck-checker-error-threshold 1000)
  '(package-selected-packages
    (quote
-    (yasnippet lsp-treemacs lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline neotree multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform))))
+    (web-mode py-autopep8 yasnippet lsp-treemacs lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline neotree multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -222,3 +216,4 @@
  ;; If there is more than one, they won't work right.
  )
 (put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
