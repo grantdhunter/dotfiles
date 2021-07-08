@@ -105,13 +105,13 @@ setopt nosharehistory
 e() {emacsclient -a "" -qc -n  "$@" &; disown}
 alias ec="emacsclient -qc -n"
 
-
-export DOCKER_HOST=tcp://localhost:2375
-export DISPLAY=localhost:0.0
-
 export PATH="$PATH:$HOME/.local/bin"
 export PATH="/home/ghunter/.pyenv/bin:$PATH"
 
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 source <(kubectl completion zsh)
+
+export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+
+cd ~

@@ -1,13 +1,15 @@
-;;; package --- Alain M. Lafon <alain@200ok.ch> Emacs config
-;;; Commentary:
-;;   - All of the configuration is within `configuration.org`
-;;; Code:
+;; This is only needed once, near the top of the file
+(eval-when-compile
+  (require 'use-package))
 
-(setq server-use-tcp t)
-(package-initialize)
+(require 'package)
 
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("melpa" . "https://melpa.org/packages/")))
+
+(package-initialize)
+
+
 ;; This is only needed once, near the top of the file
 (eval-when-compile
   (require 'use-package))
@@ -15,12 +17,25 @@
 (use-package yasnippet
   :ensure t)
 
+(use-package pyvenv
+  :ensure t
+  :init
+  (setenv "WORKON_HOME" "~/.pyenv/versions"))
+
 (use-package lsp-mode
   :ensure t
-  :hook (js-mode . lsp-deferred)
-  :hook (python-mode . lsp-deferred)
-  :hook (rust-mode . lsp-deferred)
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook ((js-mode . lsp-deferred)
+         (rust-mode . lsp-deferred))
   :commands lsp)
+
+(use-package lsp-jedi
+  :ensure t
+  :config
+  (with-eval-after-load "lsp-mode"
+    (add-to-list 'lsp-disabled-clients 'pyls)
+    (add-to-list 'lsp-enabled-clients 'jedi)))
 
 (use-package lsp-ui
   :ensure t
@@ -37,11 +52,12 @@
     (setq company-dabbrev-downcase nil)
     (setq company-idle-delay 0)
     (setq company-minimum-prefix-length 1)
-     (global-company-mode)
-    )
-(use-package helm-lsp
+    (global-company-mode)
+    :config
+    (push 'company-lsp company-backends)
+     )
+(use-package helm
   :ensure t
-  :commands helm-lsp-workspace-symbol
   :bind(("M-x" . helm-M-x)
         ("C-x b" . helm-mini)
         ("C-x C-b" . helm-buffers-list)
@@ -49,12 +65,39 @@
         ("C-x C-r" . helm-recentf)
         ("M-y" . helm-show-kill-ring))
   :config
+  (require 'helm-config)
+  (helm-mode 1)
+  (setq helm-autoresize-max-height 20)
+  (setq helm-autoresize-max-height 20)
   (helm-autoresize-mode 1)
+  :commands helm-lsp-workspace-symbol
   )
-(use-package lsp-treemacs
+(use-package helm-lsp
   :ensure t
-  :commands lsp-treemacs
-  :bind (("C-/" . treemacs)))
+  :config
+  (define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-global-workspace-symbol)
+  )
+
+(use-package helm-projectile
+  :ensure t)
+
+(use-package projectile
+  :ensure t
+  :config
+  (setq projectile-enable-caching t
+        projectile-indexing-method 'native
+        projectile-completion-system 'helm
+        projectile-switch-project-action 'helm-projectile
+        projectile-globally-ignored-files
+        (append '(".pyc"
+                  ".class"
+                  "~"
+                  "/node_modules")
+                projectile-globally-ignored-files))
+  (projectile-mode)
+  (helm-projectile-on)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+
 
 (use-package semantic
   :ensure t
@@ -63,24 +106,11 @@
   (global-semantic-stickyfunc-mode 1)
   )
 
-;; (use-package helm-lsp
-;;   :ensure t
-;;   :init
-;;   (setq helm-split-window-in-side-p t)
-;;   (setq-default indent-tabs-mode nil)
-;;   (setq helm-grep-ag-command "rg --color=always --colors 'match:fg:black' --colors 'match:bg:yellow' --smart-case --no-heading --line-number %s %s %s")
-;;   (setq helm-grep-ag-pipe-cmd-switches '("--colors 'match:fg:black'" "--colors 'match:bg:yellow'"))
-;;   :config
-;;   (helm-mode 1)
-;;   (helm-autoresize-mode 1)
-;;   :bind(("M-x" . helm-M-x)
-;;         ("C-x b" . helm-mini)
-;;         ("C-x C-b" . helm-buffers-list)
-;;         ("C-x C-f" . helm-find-files)
-;;         ("C-x C-r" . helm-recentf))
-;;   )
 (use-package material-theme
-    :ensure t)
+  :ensure t)
+
+;;(font-lock-add-keywords 'lisp-mode '(("\'.*\'" 0 'font-lock-single-quote-string-face t)))
+
 (use-package multiple-cursors
   :ensure t
   :bind(
@@ -93,8 +123,7 @@
 (use-package powerline
     :ensure t)
 
-(use-package projectile
-    :ensure t)
+
 (use-package flycheck
     :ensure t)
 (use-package rainbow-delimiters
@@ -118,12 +147,14 @@
     :ensure t)
 (use-package json-mode
     :ensure t)
+(use-package json-snatcher
+  :ensure t)
 
 
 (use-package yaml-mode
     :ensure t)
 
-
+(add-to-list 'auto-mode-alist '("\\.lisp\\'" . emacs-lisp-mode))
 (require 'uniquify)
 
 (setq inhibit-splash-screen t)
@@ -132,17 +163,9 @@
 (setq uniquify-buffer-name-style 'forward)
 
 (show-paren-mode)
-
-(defun disable-menu-bar (&optional frame)
-  (interactive)
-  (when window-system
-    (set-frame-size frame 100 30)
-    (menu-bar-mode -1)
-    (tool-bar-mode -1)
-    (scroll-bar-mode -1)
-    ))
-
-(add-hook 'after-make-frame-functions 'disable-menu-bar)
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
 
 (global-auto-revert-mode t)
 (global-linum-mode)
@@ -163,7 +186,7 @@
 (setq ring-bell-function 'ignore)
 (setq lazy-highlight-cleanup nil)
 (setq whitespace-line-column 500)
-
+(setq read-process-output-max 8192)
 (setq-default indent-tabs-mode
               nil)
 
@@ -175,7 +198,8 @@
     (add-hook 'after-make-frame-functions
         (lambda (frame)
             (select-frame frame)
-            (load-theme 'material t)))
+            (load-theme 'material t)
+            (set-frame-size (selected-frame) 150 48)))
     (load-theme 'material t))
 
 
@@ -207,8 +231,7 @@
  ;; If there is more than one, they won't work right.
  '(flycheck-checker-error-threshold 1000)
  '(package-selected-packages
-   (quote
-    (web-mode py-autopep8 yasnippet lsp-treemacs lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline neotree multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform))))
+   '(lsp-jedi django-snippets company helm-lsp company-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8 yasnippet lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
