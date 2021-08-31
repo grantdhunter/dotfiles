@@ -15,7 +15,9 @@
   (require 'use-package))
 
 (use-package yasnippet
-  :ensure t)
+  :ensure t
+  :init
+  (yas-global-mode 1))
 
 (use-package pyvenv
   :ensure t
@@ -27,16 +29,17 @@
   :init
   (setq lsp-keymap-prefix "C-c l")
   :hook ((js-mode . lsp-deferred)
-         (rust-mode . lsp-deferred))
-  :commands lsp)
-
-(use-package lsp-jedi
-  :ensure t
+         (rust-mode . lsp-deferred)
+         (python-mode . lsp-deferred))
+  :commands (lsp lsp-deferred)
   :config
-  (with-eval-after-load "lsp-mode"
-    (add-to-list 'lsp-disabled-clients 'pyls)
-    (add-to-list 'lsp-enabled-clients 'jedi)))
+  (setq lsp-idle-delay 0.500))
 
+(use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp-deferred))))
 (use-package lsp-ui
   :ensure t
   :commands lsp-ui-mode
@@ -44,18 +47,19 @@
   (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
   (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
   )
-(use-package company-lsp
-    :ensure t
-    :commands company-lsp
-    :hook (after-init-hook . global-flycheck-mode)
-    :init
-    (setq company-dabbrev-downcase nil)
-    (setq company-idle-delay 0)
-    (setq company-minimum-prefix-length 1)
-    (global-company-mode)
-    :config
-    (push 'company-lsp company-backends)
-     )
+(use-package company
+  :ensure t
+  :hook (after-init-hook . global-company-mode)
+  :init
+  (setq company-dabbrev-downcase nil
+        company-idle-delay 0.0
+        company-minimum-prefix-length 1
+        company-format-margin-function nil)
+
+  (global-company-mode t)
+  :config
+  (push 'company-lsp company-backends))
+
 (use-package helm
   :ensure t
   :bind(("M-x" . helm-M-x)
@@ -74,9 +78,7 @@
   )
 (use-package helm-lsp
   :ensure t
-  :config
-  (define-key lsp-mode-map [remap xref-find-apropos] #'helm-lsp-global-workspace-symbol)
-  )
+  :commands helm-lsp-workspace-symbol)
 
 (use-package helm-projectile
   :ensure t)
@@ -92,7 +94,10 @@
         (append '(".pyc"
                   ".class"
                   "~"
-                  "/node_modules")
+                  "node_modules"
+                  ".cache"
+                  "package.json"
+                  "package-lock.json")
                 projectile-globally-ignored-files))
   (projectile-mode)
   (helm-projectile-on)
@@ -174,7 +179,7 @@
 (put 'narrow-to-region 'disabled nil)
 (put 'dired-find-alternate-file 'disabled nil)
 
-(setq gc-cons-threshold 20000000)
+(setq gc-cons-threshold 100000000)
 (setq make-backup-files nil)
 (setq backup-directory-alist
       `((".*" . ,temporary-file-directory)))
@@ -186,7 +191,7 @@
 (setq ring-bell-function 'ignore)
 (setq lazy-highlight-cleanup nil)
 (setq whitespace-line-column 500)
-(setq read-process-output-max 8192)
+(setq read-process-output-max (* 1024 1024))
 (setq-default indent-tabs-mode
               nil)
 
@@ -231,7 +236,7 @@
  ;; If there is more than one, they won't work right.
  '(flycheck-checker-error-threshold 1000)
  '(package-selected-packages
-   '(lsp-jedi django-snippets company helm-lsp company-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8 yasnippet lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform)))
+   '(company-mode lsp-pyright lsp-jedi django-snippets company helm-lsp company-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8  lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
