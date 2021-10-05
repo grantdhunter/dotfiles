@@ -35,10 +35,11 @@
   :config
   (setq lsp-idle-delay 0.500))
 
-(use-package lsp-pyright
+(use-package lsp-python-ms
   :ensure t
+  :init (setq lsp-python-ms-auto-install-server t)
   :hook (python-mode . (lambda ()
-                          (require 'lsp-pyright)
+                          (require 'lsp-python-ms)
                           (lsp-deferred))))
 (use-package lsp-ui
   :ensure t
@@ -83,11 +84,23 @@
 (use-package helm-projectile
   :ensure t)
 
+(use-package helm-swoop
+  :ensure t
+  :bind(("C-s" . helm-swoop)
+        ("M-i" . helm-swoop-back-to-last-point))
+  :config
+  (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
+  (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
+  (define-key helm-multi-swoop-map (kbd "C-r") 'helm-previous-line)
+  (define-key helm-multi-swoop-map (kbd "C-s") 'helm-next-line)
+  (setq helm-swoop-split-window-function 'helm-default-display-buffer)
+  )
+
 (use-package projectile
   :ensure t
   :config
   (setq projectile-enable-caching t
-        projectile-indexing-method 'native
+        projectile-indexing-method 'alien
         projectile-completion-system 'helm
         projectile-switch-project-action 'helm-projectile
         projectile-globally-ignored-files
@@ -103,6 +116,15 @@
   (helm-projectile-on)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
 
+(use-package org
+  :ensure t
+  :bind(("C-c l" . org-store-link)
+        ("C-c a" . org-agenda)
+        ("C-c c" . org-capture))
+  :config
+  (setq org-log-done t
+        org-agenda-files (list "~/org/notes.org")
+        org-default-notes-file "~/org/notes.org"))
 
 (use-package semantic
   :ensure t
@@ -124,6 +146,9 @@
     ("C-|" .  mc/mark-all-like-this)
         ))
 
+(use-package ace-window
+  :ensure t
+  :bind (("M-o" . ace-window)))
 
 (use-package powerline
     :ensure t)
@@ -137,8 +162,14 @@
   :ensure t
   :bind (("C-c m" . magit-status)))
 
+(use-package crux
+  :ensure t
+  :bind (("C-c r" . crux-rename-file-and-buffer)))
 
-
+(use-package diff-hl
+  :ensure t
+  :config
+  (global-diff-hl-mode))
 
 (use-package toml-mode
     :ensure t)
@@ -236,12 +267,17 @@
  ;; If there is more than one, they won't work right.
  '(flycheck-checker-error-threshold 1000)
  '(package-selected-packages
-   '(company-mode lsp-pyright lsp-jedi django-snippets company helm-lsp company-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8  lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform)))
+   '(helm-swoop diff-hl diff-hl-mode crux ace-window lsp-python-ms company-mode lsp-pyright django-snippets company helm-lsp company-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8 lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform))
+ '(yas-global-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(company-scrollbar-bg ((t (:background "#3ad84d6d56b8"))))
+ '(company-scrollbar-fg ((t (:background "#307f3fcf4778"))))
+ '(company-tooltip ((t (:inherit default :background "#2a4937a43e51"))))
+ '(company-tooltip-common ((t (:inherit font-lock-constant-face))))
+ '(company-tooltip-selection ((t (:inherit font-lock-function-name-face)))))
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
