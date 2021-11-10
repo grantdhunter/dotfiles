@@ -105,13 +105,15 @@ setopt nosharehistory
 e() {emacsclient -a "" -qc -n  "$@" &; disown}
 alias ec="emacsclient -qc -n"
 
-export PATH="$PATH:$HOME/.local/bin"
-export PATH="/home/ghunter/.pyenv/bin:$PATH"
+export PATH=$PATH:$HOME/.local/bin
+export PATH=$PATH:$HOME/.pyenv/bin
+export PATH=$PATH:/usr/local/go/bin
 
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 source <(kubectl completion zsh)
 
-export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
-
-cd ~
+if [[ $(grep Microsoft /proc/version) ]]; then
+   export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+   cd ~
+fi

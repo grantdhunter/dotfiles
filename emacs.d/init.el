@@ -1,13 +1,14 @@
 ;; This is only needed once, near the top of the file
+
 (eval-when-compile
+  (require 'package)
+  (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                           ("melpa" . "https://melpa.org/packages/")))
+  (package-install 'use-package)
   (require 'use-package))
 
-(require 'package)
-
-(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")))
-
 (package-initialize)
+
 
 
 ;; This is only needed once, near the top of the file
