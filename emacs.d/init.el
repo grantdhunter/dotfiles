@@ -15,6 +15,10 @@
 (eval-when-compile
   (require 'use-package))
 
+(use-package all-the-icons
+  :ensure t
+  :if (display-graphic-p))
+
 (use-package yasnippet
   :ensure t
   :init
@@ -28,27 +32,55 @@
 (use-package lsp-mode
   :ensure t
   :init
-  (setq lsp-keymap-prefix "C-c l")
+  (setq lsp-keymap-prefix "C-c l"
+        lsp-use-plists t)
   :hook ((js-mode . lsp-deferred)
          (rust-mode . lsp-deferred)
-         (python-mode . lsp-deferred))
+         (python-mode . lsp-deferred)
+         (swift-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config
   (setq lsp-idle-delay 0.500))
 
+;; (use-package lsp-jedi
+;;   :ensure t
+;;   :config
+;;   (with-eval-after-load "lsp-mode"
+;;     (add-to-list 'lsp-disabled-clients 'pyls)
+;;     (add-to-list 'lsp-enabled-clients 'jedi)))
+;; (use-package lsp-pyright
+;;   :ensure t
+;;   :hook (python-mode . (lambda ()
+;;                           (require 'lsp-pyright)
+;;                           (lsp-deferred))))
 (use-package lsp-python-ms
   :ensure t
   :init (setq lsp-python-ms-auto-install-server t)
   :hook (python-mode . (lambda ()
-                          (require 'lsp-python-ms)
-                          (lsp-deferred))))
+                         (require 'lsp-python-ms)
+                         (lsp-deferred))))
+(use-package python-black
+  :ensure t
+  :after python
+  :hook (python-mode . python-black-on-save-mode-enable-dwim))
+
+(use-package python-isort
+  :ensure t
+  :after python
+  :hook (python-mode . python-isort-on-save-mode))
+
+(use-package lsp-sourcekit
+  :ensure t
+  :after lsp-mode
+  :config
+  (setq lsp-sourcekit-executable "/usr/local/bin/sourcekit-lsp"))
 (use-package lsp-ui
   :ensure t
   :commands lsp-ui-mode
   :config
   (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
-  )
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
+
 (use-package company
   :ensure t
   :hook (after-init-hook . global-company-mode)
@@ -95,6 +127,8 @@
   (define-key helm-multi-swoop-map (kbd "C-r") 'helm-previous-line)
   (define-key helm-multi-swoop-map (kbd "C-s") 'helm-next-line)
   (setq helm-swoop-split-window-function 'helm-default-display-buffer)
+  (setq helm-swoop-pre-input-function
+        (lambda () ""))
   )
 
 (use-package projectile
@@ -116,6 +150,16 @@
   (projectile-mode)
   (helm-projectile-on)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown"))
+(use-package grip-mode
+  :ensure t)
 
 (use-package org
   :ensure t
@@ -267,18 +311,23 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(flycheck-checker-error-threshold 1000)
+ '(lsp-ui-doc-max-height 13)
+ '(lsp-ui-doc-show-with-cursor nil)
+ '(lsp-ui-doc-show-with-mouse nil)
+ '(lsp-ui-doc-use-webkit nil)
  '(package-selected-packages
-   '(helm-swoop diff-hl diff-hl-mode crux ace-window lsp-python-ms company-mode lsp-pyright django-snippets company helm-lsp company-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8 lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform))
+   '(lsp-sourcekit swift-mode python-isort helm-rg python-black lsp-python-ms all-the-icons lsp-treemacs grip-mode helm-swoop diff-hl diff-hl-mode crux ace-window company-mode django-snippets company helm-lsp company-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8 lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform))
+ '(python-isort-arguments '("--stdout" "--atomic" "-"))
  '(yas-global-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-scrollbar-bg ((t (:background "#3ad84d6d56b8"))))
- '(company-scrollbar-fg ((t (:background "#307f3fcf4778"))))
  '(company-tooltip ((t (:inherit default :background "#2a4937a43e51"))))
  '(company-tooltip-common ((t (:inherit font-lock-constant-face))))
+ '(company-tooltip-scrollbar-thumb ((t (:background "#307f3fcf4778"))))
+ '(company-tooltip-scrollbar-track ((t (:background "#3ad84d6d56b8"))))
  '(company-tooltip-selection ((t (:inherit font-lock-function-name-face)))))
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)

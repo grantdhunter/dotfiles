@@ -113,7 +113,37 @@ eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 source <(kubectl completion zsh)
 
-if [[ $(grep Microsoft /proc/version) ]]; then
+if [[ $(grep -i microsoft /proc/version) ]]; then
+   echo "running in ms mode"
    export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
    cd ~
 fi
+
+export AWS_DEFAULT_REGION=us-east-1
+
+aws-docker-login() {
+    echo 'Logging into Docker...'
+    aws ecr get-login-password | docker login --username AWS --password-stdin 095258169967.dkr.ecr.us-east-1.amazonaws.com
+}
+
+aws-get-codeartifact() {
+    echo 'Setting CODEARTIFACT_TOKEN...'
+    export CODEARTIFACT_TOKEN=$(aws codeartifact get-authorization-token --domain drivewyze --domain-owner 095258169967 --query authorizationToken --output text)
+    echo 'Done'
+}
+
+aws-login() {
+    # Modify the line below based on your needs
+    # aws-azure-login sometimes will prompt for the password every time which is annoying
+    # so this get-caller-identity is a way to test and only prompt for login when required
+    IDENT=$(aws sts get-caller-identity 2> /dev/null)
+    if [ $? -ne 0 ]; then
+        aws-azure-login --no-prompt
+    else
+        echo "already logged in to aws as" $(echo $IDENT | jq -r .Arn)
+    fi
+    aws-docker-login
+    aws-get-codeartifact
+}
+
+aws-login
