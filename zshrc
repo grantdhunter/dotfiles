@@ -80,11 +80,6 @@ source $ZSH/oh-my-zsh.sh
 # export LANG=en_US.UTF-8
 
 
-if [[ -n $SSH_CONNECTION ]]; then
-  export EDITOR='emacs'
-else
-  export EDITOR='emacs'
-fi
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
@@ -102,22 +97,28 @@ fi
 setopt noincappendhistory
 setopt nosharehistory
 
-e() {emacsclient -a "" -qc -n  "$@" &; disown}
+export LSP_USE_PLISTS=true
+if [[ -n $SSH_CONNECTION ]]; then
+  export EDITOR='emacs'
+else
+  export EDITOR='emacs'
+fi
+
+e() {
+    emacsclient -a "" -qc -n  "$@" > /dev/null &; disown
+}
 alias ec="emacsclient -qc -n"
 
 export PATH=$PATH:$HOME/.local/bin
 export PATH=$PATH:$HOME/.pyenv/bin
 export PATH=$PATH:/usr/local/go/bin
+export PATH=$PATH:$HOME/.krew/bin
+export PATH=$PATH:$HOME/.linkerd2/bin
+export PATH=$PATH:/usr/local/swift/bin
 
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 source <(kubectl completion zsh)
-
-if [[ $(grep -i microsoft /proc/version) ]]; then
-   echo "running in ms mode"
-   export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
-   cd ~
-fi
 
 export AWS_DEFAULT_REGION=us-east-1
 
@@ -133,17 +134,34 @@ aws-get-codeartifact() {
 }
 
 aws-login() {
+    PROFILE="${1:-default}"
+    echo "logging in for " $PROFILE
     # Modify the line below based on your needs
     # aws-azure-login sometimes will prompt for the password every time which is annoying
     # so this get-caller-identity is a way to test and only prompt for login when required
-    IDENT=$(aws sts get-caller-identity 2> /dev/null)
+    IDENT=$(aws sts get-caller-identity --profile $PROFILE 2> /dev/null)
     if [ $? -ne 0 ]; then
-        aws-azure-login --no-prompt
+        aws-azure-login --no-prompt --profile $PROFILE
     else
         echo "already logged in to aws as" $(echo $IDENT | jq -r .Arn)
     fi
-    aws-docker-login
-    aws-get-codeartifact
 }
 
-aws-login
+start-dockerd ()(
+    if [[ ! -f /var/run/docker.pid ]]; then
+       nohup sudo -b dockerd  > /dev/null 2>&1
+    fi
+)
+
+
+if [[ $(grep -i microsoft /proc/version) ]]; then
+    echo "running in ms mode"
+
+    start-dockerd
+    export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
+    aws-login
+
+    aws-docker-login > /dev/null
+    aws-get-codeartifact > /dev/null
+
+fi

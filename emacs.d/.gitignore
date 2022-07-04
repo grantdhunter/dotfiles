@@ -7,3 +7,7 @@ recentf
 .lsp-session-v1
 auto-save-list/
 .mc-lists.el
+eln-cache/
+history
+*.eld
+straight/
