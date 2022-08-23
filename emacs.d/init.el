@@ -21,6 +21,7 @@
 
 (global-auto-revert-mode t)
 (global-linum-mode)
+(column-number-mode)
 
 ;;keybindings
 (global-set-key (kbd "C-x p") 'previous-multiframe-window)
@@ -144,14 +145,13 @@
   blacken
   :after lsp-mode
   :delight
-  :hook (python-mode . blacken-mode)
-  :custom (blacken-skip-string-nomalization t)
-  (blacken-line-length 99)
-  (blacken-allow-py36 t))
+  :hook (python-mode . blacken-mode))
 
 (use-package
   py-isort
-  :hook ((python-mode . pyvenv-mode)))
+  :config (setq py-isort-options '("--src ."))
+  :hook ((before-save . py-isort-before-save)
+         (python-mode . pyvenv-mode)))
 
 (use-package
   lsp-sourcekit
@@ -221,6 +221,11 @@
 (use-package savehist
   :init
   (savehist-mode))
+(use-package orderless
+  :ensure t
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
 
 (use-package consult
   :after projectile
@@ -257,6 +262,43 @@
   ;; preview when editing registers.
   (register-preview-delay 0)
   (register-preview-function #'consult-register-preview))
+
+(use-package marginalia
+  :ensure t
+  :config
+  (marginalia-mode))
+
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+  :ensure t
+  :after (embark consult)
+  :demand t ; only necessary if you have the hook below
+  ;; if you want to have consult previews as you move around an
+  ;; auto-updating embark collect buffer
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
 
 (use-package
   projectile
@@ -408,38 +450,20 @@
  '(lsp-ui-doc-show-with-cursor nil)
  '(lsp-ui-doc-show-with-mouse nil)
  '(lsp-ui-doc-use-webkit nil)
- '(package-selected-packages '(password-store slack k8s-mode lsp-sourcekit swift-mode python-isort
-                                              helm-rg python-black lsp-python-ms all-the-icons
-                                              lsp-treemacs grip-mode helm-swoop diff-hl diff-hl-mode
-                                              crux ace-window company-mode django-snippets company
-                                              helm-lsp pyvenv json-snatcher package-lint helm-slime
-                                              slime slime-company slime-repl-ansi-color
-                                              helm-projectile web-mode py-autopep8 lsp-ui uniquify
-                                              lsp-helm lsp-company yaml-mode use-package toml-mode
-                                              rust-mode rainbow-delimiters projectile powerline
-                                              multiple-cursors material-theme magit lsp-mode
-                                              json-mode jinja2-mode gnu-elpa-keyring-update flycheck
-                                              company-terraform))
+ '(package-selected-packages
+   '(password-store slack k8s-mode lsp-sourcekit swift-mode python-isort helm-rg python-black lsp-python-ms all-the-icons lsp-treemacs grip-mode helm-swoop diff-hl diff-hl-mode crux ace-window company-mode django-snippets company helm-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8 lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform))
  '(python-isort-arguments '("--stdout" "--atomic" "-"))
- '(warning-suppress-types
-   '((use-package)
-     (comp)))
+ '(warning-suppress-types '((use-package) (comp)))
  '(yas-global-mode t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-tooltip ((t
-                     (:inherit default
-                               :background "#2a4937a43e51"))))
- '(company-tooltip-common ((t
-                            (:inherit font-lock-constant-face))))
- '(company-tooltip-scrollbar-thumb ((t
-                                     (:background "#307f3fcf4778"))))
- '(company-tooltip-scrollbar-track ((t
-                                     (:background "#3ad84d6d56b8"))))
- '(company-tooltip-selection ((t
-                               (:inherit font-lock-function-name-face)))))
+ '(company-tooltip ((t (:inherit default :background "#2a4937a43e51"))))
+ '(company-tooltip-common ((t (:inherit font-lock-constant-face))))
+ '(company-tooltip-scrollbar-thumb ((t (:background "#307f3fcf4778"))))
+ '(company-tooltip-scrollbar-track ((t (:background "#3ad84d6d56b8"))))
+ '(company-tooltip-selection ((t (:inherit font-lock-function-name-face)))))
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
