@@ -43,6 +43,7 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 (require 'package)
+(package-initialize)
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -51,7 +52,7 @@
 ;; Integrates `straight' directly into the `use-package' package through the
 ;; `:straight' expression.
 (straight-use-package 'use-package)
-
+(setq straight-use-package-by-default t)
 (use-package
   delight)
 (use-package
@@ -104,7 +105,7 @@
          (rust-mode . lsp-deferred)
          (python-mode . lsp-deferred)
          (swift-mode . lsp-deferred)
-         (sh-mode . lsp-deferred))
+         (sql-mode .lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (setq lsp-idle-delay 0.500)
   :custom (lsp-enable-folding nil)
@@ -124,13 +125,8 @@
                                                (shell-quote-argument (buffer-file-name))))
                         (revert-buffer t t t))
                (warn
-                "[✗] python-mode: Cannot find autoflake executable.")))
-  :custom (flycheck-pylintrc "~/.pylintrc")
-  (flycheck-python-pylint-executable "/usr/bin/pylint"))
+                "[✗] python-mode: Cannot find autoflake executable."))))
 
-(use-package
-  pyvenv
-  :init (setenv "WORKON_HOME" "~/.pyenv/versions"))
 
 (use-package
   lsp-pyright
@@ -149,9 +145,7 @@
 
 (use-package
   py-isort
-  :config (setq py-isort-options '("--src ."))
-  :hook ((before-save . py-isort-before-save)
-         (python-mode . pyvenv-mode)))
+  :hook ((before-save . py-isort-before-save)))
 
 (use-package
   lsp-sourcekit
@@ -354,15 +348,15 @@
   (flyspell-issue-message-flag nil)
   (flyspell-issue-welcome-flag nil))
 
-(use-package
-  ispell
-  :custom (ispell-hunspell-dict-paths-alist '(("en_CA" "/usr/share/hunspell/en_CA.aff")))
-  (ispell-silently-savep t)
-  :config (setenv "LANG" "en_CA")
-  (setq ispell-program-name "hunspell")
-  (setq ispell-local-dictionary-alist '(("en_CA" "[[:alpha:]]" "[^[:alpha:]]" "['’-]" t ("-d"
-                                                                                         "en_CA" )
-                                         nil utf-8))))
+;; (use-package
+;;   ispell
+;;   :custom (ispell-hunspell-dict-paths-alist '(("en_CA" "/usr/share/hunspell/en_CA.aff")))
+;;   (ispell-silently-savep t)
+;;   :config (setenv "LANG" "en_CA")
+;;   (setq ispell-program-name "hunspell")
+;;   (setq ispell-local-dictionary-alist '(("en_CA" "[[:alpha:]]" "[^[:alpha:]]" "['’-]" t ("-d"
+;;                                                                                          "en_CA" )
+;;                                          nil utf-8))))
 (use-package
   semantic
   :config (semantic-mode 1)
@@ -428,12 +422,13 @@
 (add-hook 'eww-mode-hook 'scroll-lock-mode)
 
 ;;cleanup buffers
-(setq clean-buffer-list-delay-special 900)
-(defvar clean-buffer-list-timer nil)
-(setq clean-buffer-list-timer (run-at-time t 7200 'clean-buffer-list))
-;; kill everything, clean-buffer-list is very intelligent at not killing
-;; unsaved buffer.
-(setq clean-buffer-list-kill-regexps '("^.*$"))
+(setq clean-buffer-list-delay-special (* 8 3600))
+(setq clean-buffer-list-delay-general 5)
+;; (defvar clean-buffer-list-timer nil)
+;; (setq clean-buffer-list-timer (run-at-time t 7200 'clean-buffer-list))
+;; ;; kill everything, clean-buffer-list is very intelligent at not killing
+;; ;; unsaved buffer.
+;; (setq clean-buffer-list-kill-regexps '("^.*$"))
 
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 
