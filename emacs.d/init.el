@@ -1,17 +1,26 @@
 (setq-default auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
               backup-directory-alist `((".*" . ,temporary-file-directory))
               undo-tree-history-directory-alist `((".*" . ,temporary-file-directory))
-              confirm-kill-emacs 'y-or-n-p frame-title-format "%F %b " gc-cons-threshold (* (* 1
-                                                                                               128)
-                                                                                            1024
-                                                                                            1024) ;; 100mb
-              indent-tabs-mode nil inhibit-splash-screen t inhibit-startup-message t
-              lazy-highlight-cleanup nil make-backup-files nil read-process-output-max (* 1 (* 1024
-                                                                                               1024))
-              ;; 1mb
-              ring-bell-function 'ignore uniquify-buffer-name-style 'forward
-              use-package-always-ensure t vc-follow-symlinks t warning-minimum-level
-              :error whitespace-line-column 500)
+              confirm-kill-emacs 'y-or-n-p
+              frame-title-format "%F %b "
+              gc-cons-threshold (* (* 1
+                                      128)
+                                   1024
+                                   1024) ;; 100mb
+              indent-tabs-mode nil
+              inhibit-splash-screen t
+              inhibit-startup-message t
+              lazy-highlight-cleanup nil
+              make-backup-files nil
+              read-process-output-max (* 1 (* 1024
+                                              1024)) ;; 1mb
+              ring-bell-function 'ignore
+              uniquify-buffer-name-style 'forward
+
+              vc-follow-symlinks t
+              warning-minimum-level
+              :error whitespace-line-column 500
+              package-enable-at-startup nil)
 
 (fset 'yes-or-no-p 'y-or-n-p)
 (show-paren-mode)
@@ -23,89 +32,58 @@
 (global-linum-mode)
 (column-number-mode)
 
+
 ;;keybindings
-(global-set-key (kbd "C-x p") 'previous-multiframe-window)
+(global-set-key (kbd "C-x O") 'previous-multiframe-window)
 
 
-
-(setq package-archives '(("elpa" . "https://elpa.gnu.org/packages/")
-                         ("melpa" . "https://melpa.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")))
 (defvar bootstrap-version)
-(let ((bootstrap-file (expand-file-name "straight/repos/straight.el/bootstrap.el"
-                                        user-emacs-directory))
-      (bootstrap-version 5))
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 6))
   (unless (file-exists-p bootstrap-file)
-    (with-current-buffer (url-retrieve-synchronously
-                          "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-                          'silent 'inhibit-cookies)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
-(require 'package)
-(package-initialize)
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+
 
 
 ;; Integrates `straight' directly into the `use-package' package through the
 ;; `:straight' expression.
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
+
 (use-package
   delight)
+
+;; theme
 (use-package
-  material-theme)
+  material-theme
+  :config
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions
+                (lambda (frame)
+                  (select-frame frame)
+                  (load-theme 'material t)
+                  (set-frame-size (selected-frame) 150 48)))
+    (load-theme 'material t)))
 
-(if (daemonp)
-    (add-hook 'after-make-frame-functions (lambda (frame)
-                                            (select-frame frame)
-                                            (load-theme 'material t)
-                                            (set-frame-size (selected-frame) 150 48)))
-  (load-theme 'material t))
 
+;; globally used packages
 (use-package
   whitespace
   :config (add-hook 'before-save-hook 'delete-trailing-whitespace))
 
-
-(use-package
-  eldoc
-  :delight)
-
-(use-package
-  password-store)
-(setq auth-sources '(password-store))
-
-(use-package
-  all-the-icons
-  :if (display-graphic-p))
-
-(use-package
-  yasnippet-snippets
-  :after yasnippet
-  :config (yasnippet-snippets-initialize))
-
-(use-package
-  yasnippet
-  :delight yas-minor-mode
-  :hook (yas-minor-mode . gh/disable-yas-if-no-snippets)
-  :config (yas-global-mode)
-  :preface (defun gh/disable-yas-if-no-snippets ()
-             (when (and yas-minor-mode
-                        (null (yas--get-snippet-tables)))
-               (yas-minor-mode -1))))
-
 (use-package
   lsp-mode
-  :delight lsp-mode
   :init (setq lsp-keymap-prefix "C-c l" lsp-use-plists t)
   :hook ((js-mode . lsp-deferred)
-         (rust-mode . lsp-deferred)
          (python-mode . lsp-deferred)
-         (swift-mode . lsp-deferred)
-         (sql-mode .lsp-deferred))
+         (sql-mode . lsp-deferred))
   :commands (lsp lsp-deferred)
   :config (setq lsp-idle-delay 0.500)
   :custom (lsp-enable-folding nil)
@@ -113,94 +91,11 @@
   (lsp-enable-snippet nil))
 
 (use-package
-  python
-  :after lsp-mode
-  :ensure flycheck
-  :delight "Py"
-  :preface (defun python-remove-unused-imports()
-             "Remove unused imports and unused variables with autoflake."
-             (interactive)
-             (if (executable-find "autoflake")
-                 (progn (shell-command (format "autoflake --remove-all-unused-imports -i %s"
-                                               (shell-quote-argument (buffer-file-name))))
-                        (revert-buffer t t t))
-               (warn
-                "[✗] python-mode: Cannot find autoflake executable."))))
-
-
-(use-package
-  lsp-pyright
-  :after lsp-mode
-  :config (setq lsp-pyright-venv-path "~/.pyenv/version")
-  :if (executable-find "pyright")
-  ;; To properly load `lsp-pyright', the `require' instruction is important.
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp-deferred))))
-(use-package
-  blacken
-  :after lsp-mode
-  :delight
-  :hook (python-mode . blacken-mode))
-
-(use-package
-  py-isort
-  :hook ((before-save . py-isort-before-save)))
-
-(use-package
-  lsp-sourcekit
-  :after lsp-mode
-  :config (setq lsp-sourcekit-executable "/usr/local/bin/sourcekit-lsp"))
-(use-package
   lsp-ui
   :after lsp-mode
   :commands lsp-ui-mode
   :config (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
   (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
-
-(use-package
-  company
-  :after lsp-mode
-  :delight
-  :hook (after-init-hook . global-company-mode)
-  :init (setq company-dabbrev-downcase nil company-idle-delay 0.0 company-minimum-prefix-length 1
-              company-format-margin-function nil))
-
-;; (use-package
-;;   helm
-
-;;   :delight :bind(("M-x" . helm-M-x)
-;;                  ("C-x b" . helm-mini)
-;;                  ("C-x C-b" . helm-buffers-list)
-;;                  ("C-x C-f" . helm-find-files)
-;;                  ("C-x C-r" . helm-recentf)
-;;                  ("M-y" . helm-show-kill-ring))
-;;   :config (require 'helm-config)
-;;   (helm-mode 1)
-;;   (setq helm-autoresize-max-height 20)
-;;   (setq helm-autoresize-max-height 20)
-;;   (helm-autoresize-mode 1)
-;;   :commands helm-lsp-workspace-symbol)
-;; (use-package
-;;   helm-lsp
-;;   :after lsp-mode
-;;   :commands helm-lsp-workspace-symbol)
-
-;; (use-package
-;;   helm-projectile
-;;   :after projectile
-;;   :delight)
-
-;; (use-package
-;;   helm-swoop
-;;   :bind(("C-s" . helm-swoop)
-;;         ("M-i" . helm-swoop-back-to-last-point))
-;;   :config (define-key helm-swoop-map (kbd "C-r") 'helm-previous-line)
-;;   (define-key helm-swoop-map (kbd "C-s") 'helm-next-line)
-;;   (define-key helm-multi-swoop-map (kbd "C-r") 'helm-previous-line)
-;;   (define-key helm-multi-swoop-map (kbd "C-s") 'helm-next-line)
-;;   (setq helm-swoop-split-window-function 'helm-default-display-buffer)
-;;   (setq helm-swoop-pre-input-function (lambda () "")))
 
 (use-package vertico
   :straight (:files (:defaults "extensions/*"))
@@ -215,39 +110,98 @@
 (use-package savehist
   :init
   (savehist-mode))
-(use-package orderless
-  :ensure t
-  :custom
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles basic partial-completion)))))
 
+(use-package emacs
+  :init
+  ;; Add prompt indicator to `completing-read-multiple'.
+  ;; We display [CRM<separator>], e.g., [CRM,] if the separator is a comma.
+  (defun crm-indicator (args)
+    (cons (format "[CRM%s] %s"
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+  ;; Do not allow the cursor in the minibuffer prompt
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+  ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+  ;; Vertico commands are hidden in normal buffers.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable recursive minibuffers
+  (setq enable-recursive-minibuffers t))
+
+(use-package orderless
+  :init
+  ;; Configure a custom style dispatcher (see the Consult wiki)
+  ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
+  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
+
+
+(defun consult-ripgrep-at-point ()
+    (interactive)
+    (consult-ripgrep nil (thing-at-point 'symbol)))
 (use-package consult
-  :after projectile
-  :bind  (;; Related to the control commands.
-          ("<help> a" . consult-apropos)
-          ("C-x b" . consult-buffer)
-          ("C-x M-:" . consult-complex-command)
-          ("C-c k" . consult-kmacro)
-          ;; Related to the navigation.
-          ("M-g a" . consult-org-agenda)
-          ("M-g e" . consult-error)
-          ("M-g g" . consult-goto-line)
-          ("M-g h" . consult-org-heading)
-          ("M-g i" . consult-imenu)
-          ("M-g k" . consult-global-mark)
-          ("M-g l" . consult-line)
-          ("M-g m" . consult-mark)
-          ("M-g o" . consult-outline)
-          ("M-g I" . consult-project-imenu)
-          ;; Related to the search and selection.
-          ("M-s G" . consult-git-grep)
-          ("M-s g" . consult-grep)
-          ("M-s k" . consult-keep-lines)
-          ("M-s l" . consult-locate)
-          ("M-s m" . consult-multi-occur)
-          ("M-s r" . consult-ripgrep)
-          ("M-s u" . consult-focus-lines)
-          ("M-s f" . consult-find))
+  :bind  (;; C-c bindings (mode-specific-map)
+         ("C-c h" . consult-history)
+         ("C-c m" . consult-mode-command)
+         ("C-c k" . consult-kmacro)
+         ;; C-x bindings (ctl-x-map)
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ("<help> a" . consult-apropos)            ;; orig. apropos-command
+         ;; M-g bindings (goto-map)
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings (search-map)
+         ("M-s d" . consult-find)
+         ("M-s D" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep-at-point)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s m" . consult-multi-occur)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+         ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+
   :custom
   (completion-in-region-function #'consult-completion-in-region)
   (consult-narrow-key "<")
@@ -257,113 +211,25 @@
   (register-preview-delay 0)
   (register-preview-function #'consult-register-preview))
 
-(use-package marginalia
-  :ensure t
-  :config
-  (marginalia-mode))
 
-(use-package embark
-  :ensure t
+(use-package consult-lsp
+  :config (define-key lsp-mode-map [remap xref-find-apropos] #'consult-lsp-symbols))
 
+(use-package
+  corfu
+  :custom
+  (corfu-auto t)
+  (corfu-auto-delay 0)
+  (corfu-auto-prefix 0)
+  (corfu-cycle t)
   :bind
-  (("C-." . embark-act)         ;; pick some comfortable binding
-   ("C-;" . embark-dwim)        ;; good alternative: M-.
-   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
-
+  (:map corfu-map
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
   :init
-
-  ;; Optionally replace the key help with a completing-read interface
-  (setq prefix-help-command #'embark-prefix-help-command)
-
-  :config
-
-  ;; Hide the mode line of the Embark live/completions buffers
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none)))))
-
-;; Consult users will also want the embark-consult package.
-(use-package embark-consult
-  :ensure t
-  :after (embark consult)
-  :demand t ; only necessary if you have the hook below
-  ;; if you want to have consult previews as you move around an
-  ;; auto-updating embark collect buffer
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
-
-
-(use-package
-  projectile
-  :delight '(:eval (projectile-project-name))
-  :custom
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-  (projectile-enable-caching t projectile-indexing-method 'alien)
-  (projectile-switch-project-action #'projectile-dired)
-  :config
-  (setq projectile-globally-ignored-files (append '(".pyc" ".class" "~" "node_modules"
-                                                    ".cache" "package.json"
-                                                    "package-lock.json")
-                                                  projectile-globally-ignored-files))
-  (projectile-global-mode))
-
-
-
-(use-package
-  markdown-mode
-  :commands (markdown-mode gfm-mode)
-  :mode (("README\\.md\\'" . gfm-mode)
-         ("\\.md\\'" . markdown-mode)
-         ("\\.markdown\\'" . markdown-mode))
-  :init (setq markdown-command "multimarkdown"))
-(use-package
-  grip-mode)
-
-(use-package
-  org
-  :bind(("C-c l" . org-store-link)
-        ("C-c a" . org-agenda)
-        ("C-c c" . org-capture))
-  :ensure org-contrib
-  :custom (setq org-default-notes-file (concat org-directory "/notes.org"))
-  (org-todo-keywords '((sequence "TODO(t)" "STARTED(s)" "NEXT(n)" "SOMEDAY(.)" "WAITING(w)""|"
-                                 "DONE(x!)" "CANCELLED(c@)"))))
-
-(use-package
-  toc-org
-  :after org
-  :hook (org-mode . toc-org-enable))
-
-(use-package
-  flyspell
-  :ensure nil
-  :delight
-  :hook ((text-mode . flyspell-mode)
-         (prog-mode . flyspell-prog-mode))
-  :custom
-  ;; Add correction to abbreviation table.
-  (flyspell-abbrev-p t)
-  (flyspell-default-dictionary "en_CA")
-  (flyspell-issue-message-flag nil)
-  (flyspell-issue-welcome-flag nil))
-
-;; (use-package
-;;   ispell
-;;   :custom (ispell-hunspell-dict-paths-alist '(("en_CA" "/usr/share/hunspell/en_CA.aff")))
-;;   (ispell-silently-savep t)
-;;   :config (setenv "LANG" "en_CA")
-;;   (setq ispell-program-name "hunspell")
-;;   (setq ispell-local-dictionary-alist '(("en_CA" "[[:alpha:]]" "[^[:alpha:]]" "['’-]" t ("-d"
-;;                                                                                          "en_CA" )
-;;                                          nil utf-8))))
-(use-package
-  semantic
-  :config (semantic-mode 1)
-  (global-semantic-stickyfunc-mode 1))
-
-
-;;(font-lock-add-keywords 'lisp-mode '(("\'.*\'" 0 'font-lock-single-quote-string-face t)))
+  (global-corfu-mode))
 
 (use-package
   multiple-cursors
@@ -373,92 +239,111 @@
 
 (use-package
   undo-tree
-  :delight undo-tree-mode
   :config (global-undo-tree-mode))
 
-(use-package
-  ace-window
-  :bind (("M-o" . ace-window)))
 
 (use-package
-  flycheck)
-(use-package
   rainbow-delimiters
-  :delight)
-(use-package
-  magit
-  :bind (("C-c m" . magit-status))
-  :custom (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+  :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package
   crux
   :bind (("C-c r" . crux-rename-file-and-buffer)))
 
 (use-package
-  diff-hl
-  :config (global-diff-hl-mode))
+  magit
+  :bind (("C-c m" . magit-status))
+  :custom (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+
+;;python
+(use-package
+  python
+  :after lsp-mode
+  :ensure flycheck
+  :preface (defun python-remove-unused-imports()
+             "Remove unused imports and unused variables with autoflake."
+             (interactive)
+             (if (executable-find "autoflake")
+                 (progn (shell-command (format "autoflake --remove-all-unused-imports -i %s"
+                                               (shell-quote-argument (buffer-file-name))))
+                        (revert-buffer t t t))
+               (warn
+                "[✗] python-mode: Cannot find autoflake executable."))))
+(use-package
+  blacken
+  :after lsp-mode
+  :hook (python-mode . blacken-mode))
 
 (use-package
-  toml-mode)
+  py-isort
+  :hook (before-save . py-isort-before-save))
+
 (use-package
-  rust-mode)
-(use-package
-  terraform-mode)
-(use-package
-  company-terraform)
-(use-package
-  jinja2-mode)
-(use-package
-  json-mode)
-(use-package
-  json-snatcher)
+  lsp-pyright
+  :after lsp-mode
+  :config (setq lsp-pyright-venv-path "~/.pyenv/version")
+  :if (executable-find "pyright")
+  ;; To properly load `lsp-pyright', the `require' instruction is important.
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (eglot))))
+
+
+;; misc langs
 (use-package
   yaml-mode)
 
-(add-to-list 'auto-mode-alist '("\\.lisp\\'" . emacs-lisp-mode))
-(require 'uniquify)
+
+;; org mode
+(use-package
+  org
+  :mode (("\\.org$" . org-mode))
+  :init
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((sql . t)
+     (python . t)))
+
+  (defun my-org-confirm-babel-evaluate (lang body)
+    (not (member lang `("sql" "emacs-lisp" "python"))))  ;don't ask for ditaa
+  (setq org-confirm-babel-evaluate #'my-org-confirm-babel-evaluate))
 
 
-(add-hook 'eww-mode-hook 'scroll-lock-mode)
+(setq org-directory (concat (getenv "HOME") "/notes/"))
+(use-package
+  org-roam
+  :after org
+  :init (setq org-roam-v2-ack t)
+  :custom (org-roam-directory (file-truename org-directory))
+  :bind (("C-c n f" . org-roam-node-find)
+         ("C-c n r" . org-roam-node-random)
+         (:map org-mode-map
+               (("C-c n i" . org-roam-node-insert)
+                ("C-c n o" . org-id-get-create)
+                ("C-c n t" . org-roam-tag-add)
+                ("C-c n a" . org-roam-alias-add)
+                ("C-c n l" . org-roam-buffer-toggle))))
+  :config
+  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  (org-roam-db-autosync-mode))
 
-;;cleanup buffers
-(setq clean-buffer-list-delay-special (* 8 3600))
-(setq clean-buffer-list-delay-general 5)
-;; (defvar clean-buffer-list-timer nil)
-;; (setq clean-buffer-list-timer (run-at-time t 7200 'clean-buffer-list))
-;; ;; kill everything, clean-buffer-list is very intelligent at not killing
-;; ;; unsaved buffer.
-;; (setq clean-buffer-list-kill-regexps '("^.*$"))
-
-(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-
-
-
-;;; init.el ends here
+(use-package
+  org-roam-ui
+  :after org-roam
+  :config (setq org-roam-ui-sync-theme t
+                org-roam-ui-follow t
+                org-roam-ui-update-on-save t
+                org-roam-ui-open-on-start t))
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(flycheck-checker-error-threshold 1000)
- '(lsp-ui-doc-max-height 13)
- '(lsp-ui-doc-show-with-cursor nil)
- '(lsp-ui-doc-show-with-mouse nil)
- '(lsp-ui-doc-use-webkit nil)
- '(package-selected-packages
-   '(password-store slack k8s-mode lsp-sourcekit swift-mode python-isort helm-rg python-black lsp-python-ms all-the-icons lsp-treemacs grip-mode helm-swoop diff-hl diff-hl-mode crux ace-window company-mode django-snippets company helm-lsp pyvenv json-snatcher package-lint helm-slime slime slime-company slime-repl-ansi-color helm-projectile web-mode py-autopep8 lsp-ui uniquify lsp-helm lsp-company yaml-mode use-package toml-mode rust-mode rainbow-delimiters projectile powerline multiple-cursors material-theme magit lsp-mode json-mode jinja2-mode gnu-elpa-keyring-update flycheck company-terraform))
- '(python-isort-arguments '("--stdout" "--atomic" "-"))
- '(warning-suppress-types '((use-package) (comp)))
- '(yas-global-mode t))
+ '(org-export-backends '(ascii html icalendar latex md odt)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(company-tooltip ((t (:inherit default :background "#2a4937a43e51"))))
- '(company-tooltip-common ((t (:inherit font-lock-constant-face))))
- '(company-tooltip-scrollbar-thumb ((t (:background "#307f3fcf4778"))))
- '(company-tooltip-scrollbar-track ((t (:background "#3ad84d6d56b8"))))
- '(company-tooltip-selection ((t (:inherit font-lock-function-name-face)))))
-(put 'upcase-region 'disabled nil)
-(put 'downcase-region 'disabled nil)
+ )
