@@ -80,15 +80,22 @@
 
 (use-package
   lsp-mode
-  :init (setq lsp-keymap-prefix "C-c l" lsp-use-plists t)
+  :init
+  (setq lsp-keymap-prefix "C-c l" lsp-use-plists t)
+  (defun my/lsp-mode-setup-completion()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless))) ;; Configure orderless
   :hook ((js-mode . lsp-deferred)
          (python-mode . lsp-deferred)
-         (sql-mode . lsp-deferred))
+         (sql-mode . lsp-deferred)
+         (lsp-completion-mode . my/lsp-mode-setup-completion))
   :commands (lsp lsp-deferred)
   :config (setq lsp-idle-delay 0.500)
-  :custom (lsp-enable-folding nil)
+  :custom
+  (lsp-enable-folding nil)
   (lsp-enable-links nil)
-  (lsp-enable-snippet nil))
+  (lsp-enable-snippet nil)
+  (lsp-completion-provider :none))
 
 (use-package
   lsp-ui
@@ -220,7 +227,7 @@
   :custom
   (corfu-auto t)
   (corfu-auto-delay 0)
-  (corfu-auto-prefix 0)
+  (corfu-auto-prefix 1)
   (corfu-cycle t)
   :bind
   (:map corfu-map
@@ -290,11 +297,24 @@
                          (eglot))))
 
 
+;; js
+(use-package
+  prettier-js
+  :custom
+  (js-indent-level 2)
+  :after lsp-mode
+  :hook (js-mode . prettier-js-mode))
+
+
 ;; misc langs
 (use-package
   yaml-mode)
+(use-package
+  openapi-preview
+  :straight  '(openapi-preview :type git :host github :repo "merrickluo/openapi-preview"))
 
-
+(use-package
+  dockerfile-mode)
 ;; org mode
 (use-package
   org
@@ -335,12 +355,7 @@
                 org-roam-ui-follow t
                 org-roam-ui-update-on-save t
                 org-roam-ui-open-on-start t))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(org-export-backends '(ascii html icalendar latex md odt)))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
