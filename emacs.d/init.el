@@ -86,6 +86,7 @@
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))) ;; Configure orderless
   :hook ((js-mode . lsp-deferred)
+         (typescript-mode . lsp-deferred)
          (python-mode . lsp-deferred)
          (sql-mode . lsp-deferred)
          (lsp-completion-mode . my/lsp-mode-setup-completion))
@@ -97,6 +98,8 @@
   (lsp-enable-snippet nil)
   (lsp-completion-provider :none))
 
+;; (add-hook 'hack-local-variables-hook
+;;           (lambda () (when (derived-mode-p 'prog-mode) (lsp))))
 (use-package
   lsp-ui
   :after lsp-mode
@@ -178,7 +181,7 @@
          ("<help> a" . consult-apropos)            ;; orig. apropos-command
          ;; M-g bindings (goto-map)
          ("M-g e" . consult-compile-error)
-         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g f" . consult-flycheck)               ;; Alternative: consult-flycheck
          ("M-g g" . consult-goto-line)             ;; orig. goto-line
          ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
          ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
@@ -223,6 +226,9 @@
   :config (define-key lsp-mode-map [remap xref-find-apropos] #'consult-lsp-symbols))
 
 (use-package
+  consult-flycheck)
+
+(use-package
   corfu
   :custom
   (corfu-auto t)
@@ -258,10 +264,16 @@
   :bind (("C-c r" . crux-rename-file-and-buffer)))
 
 (use-package
+  compat
+  :straight (compat :host github :repo "emacs-compat/compat"))
+
+(use-package
   magit
   :bind (("C-c m" . magit-status))
   :custom (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
+(use-package
+  flycheck)
 
 ;;python
 (use-package
@@ -297,14 +309,17 @@
                          (eglot))))
 
 
-;; js
+;; js/ts
+(setq typescript-indent-level 2)
 (use-package
   prettier-js
-  :custom
-  (js-indent-level 2)
   :after lsp-mode
-  :hook (js-mode . prettier-js-mode))
+  :hook ((js-mode . prettier-js-mode)
+         (typescript-mode . prettier-js-mode)))
 
+(use-package
+  typescript-mode
+  :hook (before-save . (lambda () (lsp-organize-imports))))
 
 ;; misc langs
 (use-package
