@@ -33,7 +33,7 @@ export PATH=$PATH:/usr/local/gradle-7.5.1/bin
 export PATH=$PATH:$HOME/.krew/bin
 export PATH=$PATH:$HOME/.linkerd2/bin
 export PATH=$PATH:/usr/local/swift/bin
-
+export PATH=$PATH:$HOME/.cargo/bin
 source <(kubectl completion zsh)
 
 # python setup

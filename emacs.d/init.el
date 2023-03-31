@@ -1,6 +1,5 @@
-(setq-default auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
-              backup-directory-alist `((".*" . ,temporary-file-directory))
-              undo-tree-history-directory-alist `((".*" . ,temporary-file-directory))
+(setq-default backup-directory-alist `((".*" . ,(concat user-emacs-directory "backups")))
+              undo-tree-history-directory-alist `((".*" . ,(concat user-emacs-directory "undo")))
               confirm-kill-emacs 'y-or-n-p
               frame-title-format "%F %b "
               gc-cons-threshold (* (* 1
@@ -29,6 +28,10 @@
 (scroll-bar-mode -1)
 
 (global-auto-revert-mode t)
+
+(setq linum-format
+      (lambda (line)
+        (propertize (number-to-string (1- line)) 'face 'linum)))
 (global-linum-mode)
 (column-number-mode)
 
@@ -106,6 +109,13 @@
   :commands lsp-ui-mode
   :config (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
   (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
+(use-package
+  dap-mode
+  :config
+  (setq dap-auto-configure-features '(sessions locals controls tooltip))
+  (require 'dap-node)
+  (dap-node-setup))
+
 
 (use-package vertico
   :straight (:files (:defaults "extensions/*"))
@@ -275,6 +285,15 @@
 (use-package
   flycheck)
 
+(use-package
+  tree-sitter
+  :init
+  (global-tree-sitter-mode)
+  :hook (tree-sitter-after-on-hook . #'tree-sitter-hl-mode))
+
+(use-package
+  tree-sitter-langs)
+
 ;;python
 (use-package
   python
@@ -377,3 +396,53 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(safe-local-variable-values
+   '((eval let
+           ((sdks-directory
+             (concat
+              (car
+               (dir-locals-find-file default-directory))
+              ".yarn/sdks/")))
+           (set
+            (make-local-variable 'flycheck-javascript-eslint-executable)
+            (concat sdks-directory "eslint/bin/eslint.js"))
+           (with-eval-after-load 'lsp-javascript
+             (lsp-dependency 'typescript-language-server
+                             (list :system
+                                   (concat "/foo/.yarn/sdks/" "typescript-language-server/lib/cli.js")))
+             (lsp-dependency 'typescript
+                             (list :system
+                                   (concat "/foo/.yarn/sdks/" "typescript/bin/tsserver")))))
+     (eval let
+           ((sdks-directory
+             (concat
+              (car
+               (dir-locals-find-file default-directory))
+              ".yarn/sdks/")))
+           (remhash 'prettier format-all--executable-table)
+           (puthash 'prettier
+                    (concat sdks-directory "prettier/index.js")
+                    format-all--executable-table)
+           (set
+            (make-local-variable 'flycheck-javascript-eslint-executable)
+            (concat sdks-directory "eslint/bin/eslint.js"))
+           (with-eval-after-load 'lsp-javascript
+             (lsp-dependency 'typescript-language-server
+                             (list :system
+                                   (concat "/foo/.yarn/sdks/" "typescript-language-server/lib/cli.js")))
+             (lsp-dependency 'typescript
+                             (list :system
+                                   (concat "/foo/.yarn/sdks/" "typescript/bin/tsserver")))))
+     (lsp-enabled-clients ts-ls eslint)
+     (eval setq lsp-clients-typescript-server-args
+           `("--tsserver-path" ,(concat
+                                 (car
+                                  (dir-locals-find-file default-directory))
+                                 ".yarn/sdks/typescript/bin/tsserver")
+             "--stdio"))
+     (eval message "in otto"))))
