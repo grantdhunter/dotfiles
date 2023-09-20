@@ -32,9 +32,9 @@
 (setq linum-format
       (lambda (line)
         (propertize (number-to-string (1- line)) 'face 'linum)))
-(global-linum-mode)
+(global-display-line-numbers-mode)
 (column-number-mode)
-
+(pixel-scroll-precision-mode)
 
 ;;keybindings
 (global-set-key (kbd "C-x O") 'previous-multiframe-window)
@@ -88,10 +88,10 @@
   (defun my/lsp-mode-setup-completion()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))) ;; Configure orderless
-  :hook ((js-mode . lsp-deferred)
-         (typescript-mode . lsp-deferred)
-         (python-mode . lsp-deferred)
-         (sql-mode . lsp-deferred)
+  :hook ((js-ts-mode . lsp-deferred)
+         (typescript-ts-mode . lsp-deferred)
+         (python-ts-mode . lsp-deferred)
+         (sql-ts-mode . lsp-deferred)
          (lsp-completion-mode . my/lsp-mode-setup-completion))
   :commands (lsp lsp-deferred)
   :config (setq lsp-idle-delay 0.500)
@@ -109,12 +109,11 @@
   :commands lsp-ui-mode
   :config (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
   (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
+
 (use-package
   dap-mode
   :config
-  (setq dap-auto-configure-features '(sessions locals controls tooltip))
-  (require 'dap-node)
-  (dap-node-setup))
+  (setq dap-auto-configure-features '(sessions locals controls tooltip)))
 
 
 (use-package vertico
@@ -285,14 +284,76 @@
 (use-package
   flycheck)
 
-(use-package
-  tree-sitter
-  :init
-  (global-tree-sitter-mode)
-  :hook (tree-sitter-after-on-hook . #'tree-sitter-hl-mode))
+(use-package treesit
+  :straight nil
+  :preface
+  (defun mp-setup-install-grammars ()
+    "Install Tree-sitter grammars if they are absent."
+    (interactive)
+    (dolist (grammar
+             '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+     (cmake "https://github.com/uyha/tree-sitter-cmake")
+     (css "https://github.com/tree-sitter/tree-sitter-css")
+     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+     (go "https://github.com/tree-sitter/tree-sitter-go")
+     (html "https://github.com/tree-sitter/tree-sitter-html")
+     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+     (json "https://github.com/tree-sitter/tree-sitter-json")
+     (make "https://github.com/alemuller/tree-sitter-make")
+     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+     (python "https://github.com/tree-sitter/tree-sitter-python")
+     (toml "https://github.com/tree-sitter/tree-sitter-toml")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+      (add-to-list 'treesit-language-source-alist grammar)
+      ;; Only install `grammar' if we don't already have it
+      ;; installed. However, if you want to *update* a grammar then
+      ;; this obviously prevents that from happening.
+      (unless (treesit-language-available-p (car grammar))
+        (treesit-install-language-grammar (car grammar)))))
 
-(use-package
-  tree-sitter-langs)
+  ;; Optional, but recommended. Tree-sitter enabled major modes are
+  ;; distinct from their ordinary counterparts.
+  ;;
+  ;; You can remap major modes with `major-mode-remap-alist'. Note
+  ;; that this does *not* extend to hooks! Make sure you migrate them
+  ;; also
+  (dolist (mapping '((python-mode . python-ts-mode)
+                     (css-mode . css-ts-mode)
+                     (typescript-mode . tsx-ts-mode)
+                     (json-mode . json-ts-mode)
+                     (js-mode . js-ts-mode)
+                     (css-mode . css-ts-mode)
+                     (yaml-mode . yaml-ts-mode)))
+    (add-to-list 'major-mode-remap-alist mapping))
+
+  :config
+  (mp-setup-install-grammars)
+  ;; Do not forget to customize Combobulate to your liking:
+  ;;
+  ;;  M-x customize-group RET combobulate RET
+  ;;
+  (use-package combobulate
+    :preface
+    ;; You can customize Combobulate's key prefix here.
+    ;; Note that you may have to restart Emacs for this to take effect!
+    (setq combobulate-key-prefix "C-c o")
+
+    ;; Optional, but recommended.
+    ;;
+    ;; You can manually enable Combobulate with `M-x
+    ;; combobulate-mode'.
+    :hook ((python-ts-mode . combobulate-mode)
+           (js-ts-mode . combobulate-mode)
+           (css-ts-mode . combobulate-mode)
+           (yaml-ts-mode . combobulate-mode)
+           (json-ts-mode . combobulate-mode)
+           (typescript-ts-mode . combobulate-mode)
+           (tsx-ts-mode . combobulate-mode))
+    ;; Amend this to the directory where you keep Combobulate's source
+    ;; code.
+    ))
 
 ;;python
 (use-package
@@ -311,7 +372,7 @@
 (use-package
   blacken
   :after lsp-mode
-  :hook (python-mode . blacken-mode))
+  :hook (python-ts-mode . blacken-mode))
 
 (use-package
   py-isort
@@ -323,22 +384,34 @@
   :config (setq lsp-pyright-venv-path "~/.pyenv/version")
   :if (executable-find "pyright")
   ;; To properly load `lsp-pyright', the `require' instruction is important.
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (eglot))))
+  :hook (python-ts-mode . (lambda ()
+                         (require 'lsp-pyright))))
 
 
 ;; js/ts
-(setq typescript-indent-level 2)
 (use-package
   prettier-js
   :after lsp-mode
   :hook ((js-mode . prettier-js-mode)
-         (typescript-mode . prettier-js-mode)))
+         (typescript-mode . prettier-js-mode))
+  :config
+  (setq typescript-indent-level 2)
+  (require 'dap-node)
+  (dap-node-setup))
 
 (use-package
   typescript-mode
   :hook (before-save . (lambda () (lsp-organize-imports))))
+(use-package
+  jest-test-mode
+  :straight '(jest-test-mode :type git :host github :repo "grantdhunter/jest-test-mode")
+  :commands jest-test-mode
+  :hook (typescript-mode))
+;; java
+
+(use-package
+  lsp-java
+  :config (add-hook 'java-mode-hook 'lsp-deferred))
 
 ;; misc langs
 (use-package
@@ -401,6 +474,13 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("f149d9986497e8877e0bd1981d1bef8c8a6d35be7d82cba193ad7e46f0989f6a" default))
+ '(jest-test-command-string "yarn run %s jest %s %s")
+ '(lsp-ui-doc-position 'bottom)
+ '(lsp-ui-doc-show-with-mouse nil)
+ '(lsp-ui-sideline-diagnostic-max-line-length 150)
+ '(lsp-ui-sideline-diagnostic-max-lines 10)
  '(safe-local-variable-values
    '((eval let
            ((sdks-directory

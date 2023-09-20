@@ -7,8 +7,11 @@ export ZSH=$HOME/.oh-my-zsh
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="zhann"
 
-plugins=(git)
+plugins=(git
+         aws
+         kubectx)
 
+RPS1="$RPS1 "'$(kubectx_prompt_info)'
 source $ZSH/oh-my-zsh.sh
 
 setopt noincappendhistory
@@ -34,7 +37,7 @@ export PATH=$PATH:$HOME/.krew/bin
 export PATH=$PATH:$HOME/.linkerd2/bin
 export PATH=$PATH:/usr/local/swift/bin
 export PATH=$PATH:$HOME/.cargo/bin
-source <(kubectl completion zsh)
+[[ $commands[kubectl] ]] && source <(kubectl completion zsh)
 
 # python setup
 export PYENV_ROOT="$HOME/.pyenv"
