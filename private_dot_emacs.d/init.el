@@ -467,8 +467,17 @@ The DWIM behaviour of this command is as follows:
   python
   :after lsp-mode
   :ensure flycheck
-  :hook ((before-save . lsp-format-buffer)
-         (before-save . lsp-organize-imports)))
+  :preface
+  (defun lsp-fix-all ()
+    (interactive)
+    (condition-case nil
+      (lsp-execute-code-action-by-kind "source.fixAll")
+    (lsp-no-code-actions
+     (when (called-interactively-p 'any)
+       (lsp--info "source.fixAll action not available")))))
+  :hook ((before-save . lsp-fix-all)
+         (before-save . lsp-organize-imports)
+         (before-save . lsp-format-buffer)))
 (use-package
   lsp-pyright
   :after lsp-mode
