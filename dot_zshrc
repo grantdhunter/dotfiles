@@ -39,6 +39,7 @@ export PATH=$PATH:$HOME/.linkerd2/bin
 export PATH=$PATH:/usr/local/swift/bin
 export PATH=$PATH:$HOME/.cargo/bin
 [[ $commands[kubectl] ]] && source <(kubectl completion zsh)
+[[ $commands[talosctl] ]] && source <(talosctl completion zsh)
 
 # python setup
 export PYENV_ROOT="$HOME/.pyenv"
