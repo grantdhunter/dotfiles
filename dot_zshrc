@@ -38,6 +38,7 @@ export PATH=$PATH:$HOME/.krew/bin
 export PATH=$PATH:$HOME/.linkerd2/bin
 export PATH=$PATH:/usr/local/swift/bin
 export PATH=$PATH:$HOME/.cargo/bin
+export PATH=$PATH:/snap/bin
 [[ $commands[kubectl] ]] && source <(kubectl completion zsh)
 [[ $commands[talosctl] ]] && source <(talosctl completion zsh)
 
