@@ -3,7 +3,7 @@
 (setq-default backup-directory-alist `((".*" . ,(concat user-emacs-directory "backups")))
               undo-tree-history-directory-alist `((".*" . ,(concat user-emacs-directory "undo")))
               auto-save-file-name-transforms `((".*" ,(concat user-emacs-directory "autosave") t))
-	            custom-file (locate-user-emacs-file "custom.el")
+              custom-file (locate-user-emacs-file "custom.el")
               confirm-kill-emacs 'y-or-n-p
               frame-title-format "%F %b "
               gc-cons-threshold (* (* 1
@@ -25,7 +25,8 @@
               warning-minimum-level
               :error whitespace-line-column 500
               package-enable-at-startup nil
-              browse-url-generic-program (executable-find "firefox"))
+              browse-url-generic-program (executable-find "firefox")
+              tab-width 2)
 
 (load custom-file :no-error-if-file-is-missing)
 
@@ -311,10 +312,15 @@ The DWIM behaviour of this command is as follows:
   :bind (("C-c r" . crux-rename-file-and-buffer)))
 (use-package
   whitespace
-  :hook (before-save-hook . delete-trailing-whitespace))
+  :hook (before-save . (lambda ()
+                         (interactive)
+                         (whitespace-cleanup))))
+
+
 
 (use-package indent-bars
-  :hook ((prog-mode yaml-ts-mode) . indent-bars-mode)
+  :hook (((prog-mode yaml-ts-mode) . indent-bars-mode)
+         ((prog-mode python-ts-mode) . indent-bars-mode))
   :config
   (require 'indent-bars-ts)
   :custom
@@ -364,10 +370,12 @@ The DWIM behaviour of this command is as follows:
          (typescript-ts-mode . lsp-deferred)
          (python-ts-mode . lsp-deferred)
          (sql-ts-mode . lsp-deferred)
-         (yaml-ts-mode . lsp-deferred)
+         (yaml-pro-ts-mode . lsp-deferred)
+         (terraform-mode . lsp-deferred)
          (lsp-completion-mode . my/lsp-mode-setup-completion))
   :commands (lsp lsp-deferred)
-  :config (setq lsp-idle-delay 0.500)
+  :config
+  (setq lsp-idle-delay 0.500)
   (add-to-list 'lsp-file-watch-ignored-directories "\\.pyenv\\/")
   :custom
   (lsp-enable-folding nil)
@@ -375,13 +383,8 @@ The DWIM behaviour of this command is as follows:
   (lsp-enable-snippet nil)
   (lsp-completion-provider :none)
   (lsp-treemacs-sync-mode 1)
+  (lsp-disabled-clients '(tfls)))
 
-  (defun lsp-set-cfg ()
-    (let ((lsp-cfg `(:yaml (:tabSize 2))))
-
-      (lsp--set-configuration lsp-cfg)))
-
-  (add-hook 'lsp-after-initialize-hook 'lsp-set-cfg))
 
 (use-package
   lsp-ui
@@ -423,7 +426,8 @@ The DWIM behaviour of this command is as follows:
                (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
                (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
                (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))))
+               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
+               (hcl . ("https://github.com/tree-sitter-grammars/tree-sitter-hcl" "v1.1.0" "src"))))
       (add-to-list 'treesit-language-source-alist grammar)
       ;; Only install `grammar' if we don't already have it
       ;; installed. However, if you want to *update* a grammar then
@@ -440,7 +444,8 @@ The DWIM behaviour of this command is as follows:
              (go-mode . go-ts-mode)
              (css-mode . css-ts-mode)
              (json-mode . json-ts-mode)
-             (js-json-mode . json-ts-mode)))
+             (js-json-mode . json-ts-mode)
+             (hcl-mode . hcl-ts-mode)))
     (add-to-list 'major-mode-remap-alist mapping))
   :config
   (gh-setup-install-grammars)
@@ -462,8 +467,7 @@ The DWIM behaviour of this command is as follows:
     :hook ((prog-mode . combobulate-mode))
     ;; Amend this to the directory where you keep Combobulate's source
     ;; code.
-    )
-  )
+    ))
 
 (use-package
   python
@@ -477,9 +481,10 @@ The DWIM behaviour of this command is as follows:
     (lsp-no-code-actions
      (when (called-interactively-p 'any)
        (lsp--info "source.fixAll action not available")))))
-  :hook ((before-save . lsp-fix-all)
-         (before-save . lsp-organize-imports)
-         (before-save . lsp-format-buffer)))
+  :hook ((lsp-mode . (lambda ()
+                       (add-hook 'before-save-hook 'lsp-fix-all nil t)
+                       (add-hook 'before-save-hook 'lsp-organize-imports nil t)
+                       (add-hook 'before-save-hook 'lsp-format-buffer nil t)))))
 (use-package
   lsp-pyright
   :after lsp-mode
@@ -493,6 +498,14 @@ The DWIM behaviour of this command is as follows:
   (setq yaml-indent-offset 2)
   (setq lsp-yaml-format-enable nil))
 
+(use-package yaml-pro
+  :after yaml-ts-mode
+  :preface
+  (defun gh-yaml-format-on-save ()
+      (yaml-pro-format))
+  :hook (yaml-ts-mode . (lambda ()
+                          (add-hook 'before-save-hook 'gh-yaml-format-on-save nil t))))
+
 (use-package
   markdown-mode
   :mode ("README\\.md\\.'" . gfm-mode)
@@ -501,11 +514,12 @@ The DWIM behaviour of this command is as follows:
 (use-package
   dockerfile-mode)
 
-(use-package copilot
-  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-  :hook ((prog-mode . copilot-mode))
-  :bind (:map copilot-mode-map
-              ("<C-return>" . copilot-accept-completion)))
+(use-package hcl-mode)
+;;(use-package copilot
+;;  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+;;  :hook ((prog-mode . copilot-mode))
+;;  :bind (:map copilot-mode-map
+;;              ("<C-return>" . copilot-accept-completion)))
 
 
 
@@ -518,37 +532,44 @@ The DWIM behaviour of this command is as follows:
 
 
 ;; org-mode
-(setq org-agenda-files '("~/org"))
-(setq org-return-follows-link  t)
-(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
-(add-hook 'org-mode-hook 'org-indent-mode)
-(setq org-hide-emphasis-markers t)
-(add-hook 'org-mode-hook 'visual-line-mode)
-(let* ((variable-tuple
-        (cond ((x-list-fonts "ETBembo")         '(:font "ETBembo"))
-              ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
-              ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
-              ((x-list-fonts "Verdana")         '(:font "Verdana"))
-              ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
-              (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
-       (base-font-color     (face-foreground 'default nil 'default))
-       (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
+(use-package org
+  :mode (("\\.org$" . org-mode))
+  :config
+  (setq org-agenda-files '("~/org"))
+  (setq org-src-fontify-natively t)
+  (setq org-return-follows-link  t)
+  (setq org-hide-emphasis-markers t)
+  (when window-system
+    (progn
+      (let* ((variable-tuple
+              (cond ((x-list-fonts "ETBembo")         '(:font "ETBembo"))
+                    ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
+                    ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+                    ((x-list-fonts "Verdana")         '(:font "Verdana"))
+                    ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
+                    (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+             (base-font-color     (face-foreground 'default nil 'default))
+             (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
 
-  (custom-theme-set-faces
-   'user
-   `(org-level-8 ((t (,@headline ,@variable-tuple))))
-   `(org-level-7 ((t (,@headline ,@variable-tuple))))
-   `(org-level-6 ((t (,@headline ,@variable-tuple))))
-   `(org-level-5 ((t (,@headline ,@variable-tuple))))
-   `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
-   `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
-   `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
-   `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
-   `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil))))))
+        (custom-theme-set-faces
+         'user
+         `(org-level-8 ((t (,@headline ,@variable-tuple))))
+         `(org-level-7 ((t (,@headline ,@variable-tuple))))
+         `(org-level-6 ((t (,@headline ,@variable-tuple))))
+         `(org-level-5 ((t (,@headline ,@variable-tuple))))
+         `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+         `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
+         `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
+         `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
+         `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil))))))))
+  :hook
+  ((org-mode . org-indent-mode)
+   (org-mode . visual-line-mode)))
+
 
 
 (use-package ob-typescript)
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((typescript . t)
-   ))
+   (python . t)))
