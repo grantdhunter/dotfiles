@@ -41,7 +41,7 @@ export PATH=$PATH:$HOME/.cargo/bin
 export PATH=$PATH:/snap/bin
 [[ $commands[kubectl] ]] && source <(kubectl completion zsh)
 [[ $commands[talosctl] ]] && source <(talosctl completion zsh)
-
+[[ $commands[just] ]] && source <(just --completions zsh)
 # python setup
 export PYENV_ROOT="$HOME/.pyenv"
 command -v pyenv >/dev/null || export PATH=$PATH:$PYENV_ROOT/bin

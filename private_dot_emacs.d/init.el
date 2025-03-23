@@ -409,7 +409,7 @@ The DWIM behaviour of this command is as follows:
 (use-package treesit
   :straight (:type built-in)
   :preface
-  (defun gh-setup-install-grammars ()
+(defun gh-setup-install-grammars ()
     "Install Tree-sitter grammars if they are absent."
     (interactive)
     (dolist (grammar
@@ -573,3 +573,6 @@ The DWIM behaviour of this command is as follows:
  'org-babel-load-languages
  '((typescript . t)
    (python . t)))
+   
+(use-package just-mode)
+
