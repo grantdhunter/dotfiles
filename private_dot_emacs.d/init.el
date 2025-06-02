@@ -363,9 +363,17 @@ The DWIM behaviour of this command is as follows:
   lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l" lsp-use-plists t)
+
+  ;; (lsp-register-client
+  ;;  (make-lsp-client
+  ;;   :new-connection (lsp-stdio-connection '("pyrefly" "lsp"))
+  ;;   :activation-fn (lsp-activate-on "python")
+  ;;   :server-id 'pyrefly))
+
   (defun my/lsp-mode-setup-completion()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))) ;; Configure orderless
+
   :hook ((js-ts-mode . lsp-deferred)
          (typescript-ts-mode . lsp-deferred)
          (python-ts-mode . lsp-deferred)
@@ -390,8 +398,16 @@ The DWIM behaviour of this command is as follows:
   lsp-ui
   :after lsp-mode
   :commands lsp-ui-mode
-  :config (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
+  :config
+  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+  :custom
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-position 'top)
+  (lsp-ui-doc-alignment 'frame)
+  (lsp-ui-doc-side 'right)
+
+)
 
 (use-package consult-lsp
   :config (define-key lsp-mode-map [remap xref-find-apropos] #'consult-lsp-symbols))
