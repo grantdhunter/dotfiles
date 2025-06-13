@@ -425,7 +425,7 @@ The DWIM behaviour of this command is as follows:
 (use-package treesit
   :straight (:type built-in)
   :preface
-(defun gh-setup-install-grammars ()
+  (defun gh-setup-install-grammars ()
     "Install Tree-sitter grammars if they are absent."
     (interactive)
     (dolist (grammar
@@ -592,3 +592,15 @@ The DWIM behaviour of this command is as follows:
    
 (use-package just-mode)
 
+
+(use-package aidermacs
+  :bind (("C-c a" . aidermacs-transient-menu))
+  :config
+  ; Set API_KEY in .bashrc, that will automatically picked up by aider or in elisp
+  (setenv "OLLAMA_API_BASE" "http://127.0.0.1:11434")
+  (setenv "OLLAMA_CONTEXT_LENGTH" "8192")
+
+  :custom
+  ; See the Configuration section below
+  (aidermacs-use-architect-mode t)
+  (aidermacs-default-model "ollama_chat/deepseek-r1"))
