@@ -1,9 +1,9 @@
-;;; Grant Hunters init.el
+;; Grant Hunters init.el
 
 (setq-default backup-directory-alist `((".*" . ,(concat user-emacs-directory "backups")))
               undo-tree-history-directory-alist `((".*" . ,(concat user-emacs-directory "undo")))
               auto-save-file-name-transforms `((".*" ,(concat user-emacs-directory "autosave") t))
-              custom-file (locate-user-emacs-file "custom.el")
+	            custom-file (locate-user-emacs-file "custom.el")
               confirm-kill-emacs 'y-or-n-p
               frame-title-format "%F %b "
               gc-cons-threshold (* (* 1
@@ -26,7 +26,8 @@
               :error whitespace-line-column 500
               package-enable-at-startup nil
               browse-url-generic-program (executable-find "firefox")
-              tab-width 2)
+              create-lockfiles nil
+              )
 
 (load custom-file :no-error-if-file-is-missing)
 
@@ -84,6 +85,7 @@ The DWIM behaviour of this command is as follows:
 
 (fset 'yes-or-no-p 'y-or-n-p)
 
+(global-unset-key (kbd "C-z"))
 ;; Look and Feel
 (let ((mono-spaced-font "Monospace")
       (proportionately-spaced-font "Sans"))
@@ -312,15 +314,10 @@ The DWIM behaviour of this command is as follows:
   :bind (("C-c r" . crux-rename-file-and-buffer)))
 (use-package
   whitespace
-  :hook (before-save . (lambda ()
-                         (interactive)
-                         (whitespace-cleanup))))
-
-
+  :hook (before-save-hook . delete-trailing-whitespace))
 
 (use-package indent-bars
-  :hook (((prog-mode yaml-ts-mode) . indent-bars-mode)
-         ((prog-mode python-ts-mode) . indent-bars-mode))
+  :hook ((prog-mode yaml-ts-mode) . indent-bars-mode)
   :config
   (require 'indent-bars-ts)
   :custom
@@ -363,27 +360,18 @@ The DWIM behaviour of this command is as follows:
   lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l" lsp-use-plists t)
-
-  ;; (lsp-register-client
-  ;;  (make-lsp-client
-  ;;   :new-connection (lsp-stdio-connection '("pyrefly" "lsp"))
-  ;;   :activation-fn (lsp-activate-on "python")
-  ;;   :server-id 'pyrefly))
-
   (defun my/lsp-mode-setup-completion()
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))) ;; Configure orderless
-
   :hook ((js-ts-mode . lsp-deferred)
          (typescript-ts-mode . lsp-deferred)
+         (tsx-ts-mode . lsp-deferred)
          (python-ts-mode . lsp-deferred)
          (sql-ts-mode . lsp-deferred)
-         (yaml-pro-ts-mode . lsp-deferred)
-         (terraform-mode . lsp-deferred)
+         (yaml-ts-mode . lsp-deferred)
          (lsp-completion-mode . my/lsp-mode-setup-completion))
   :commands (lsp lsp-deferred)
-  :config
-  (setq lsp-idle-delay 0.500)
+  :config (setq lsp-idle-delay 0.500)
   (add-to-list 'lsp-file-watch-ignored-directories "\\.pyenv\\/")
   :custom
   (lsp-enable-folding nil)
@@ -391,23 +379,29 @@ The DWIM behaviour of this command is as follows:
   (lsp-enable-snippet nil)
   (lsp-completion-provider :none)
   (lsp-treemacs-sync-mode 1)
-  (lsp-disabled-clients '(tfls)))
+  (lsp-completion-default-behaviour :insert)
+  (defun lsp-set-cfg ()
+    (let ((lsp-cfg `(:yaml (:tabSize 2))))
+
+      (lsp--set-configuration lsp-cfg)))
+
+  (add-hook 'lsp-after-initialize-hook 'lsp-set-cfg)
+  :config
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-stdio-connection "pyrefly-language-server")
+                    :activation-fn (lsp-activate-on "python")
+                    :server-id 'pyrefly)))
 
 
 (use-package
   lsp-ui
   :after lsp-mode
   :commands lsp-ui-mode
-  :config
-  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  :config (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
   (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
   :custom
-  (lsp-ui-doc-enable t)
-  (lsp-ui-doc-position 'top)
-  (lsp-ui-doc-alignment 'frame)
-  (lsp-ui-doc-side 'right)
-
-)
+  (lsp-ui-doc-position :top)
+  (lsp-ui-doc-side :right))
 
 (use-package consult-lsp
   :config (define-key lsp-mode-map [remap xref-find-apropos] #'consult-lsp-symbols))
@@ -425,7 +419,7 @@ The DWIM behaviour of this command is as follows:
 (use-package treesit
   :straight (:type built-in)
   :preface
-  (defun gh-setup-install-grammars ()
+(defun gh-setup-install-grammars ()
     "Install Tree-sitter grammars if they are absent."
     (interactive)
     (dolist (grammar
@@ -442,8 +436,7 @@ The DWIM behaviour of this command is as follows:
                (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
                (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
                (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
-               (hcl . ("https://github.com/tree-sitter-grammars/tree-sitter-hcl" "v1.1.0" "src"))))
+               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))))
       (add-to-list 'treesit-language-source-alist grammar)
       ;; Only install `grammar' if we don't already have it
       ;; installed. However, if you want to *update* a grammar then
@@ -454,17 +447,21 @@ The DWIM behaviour of this command is as follows:
   (dolist (mapping
            '((python-mode . python-ts-mode)
              (typescript-mode . typescript-ts-mode)
+             (tsx-mode . tsx-ts-mode)
              (js2-mode . js-ts-mode)
              (bash-mode . bash-ts-mode)
              (conf-toml-mode . toml-ts-mode)
              (go-mode . go-ts-mode)
              (css-mode . css-ts-mode)
              (json-mode . json-ts-mode)
-             (js-json-mode . json-ts-mode)
-             (hcl-mode . hcl-ts-mode)))
+             (js-json-mode . json-ts-mode)))
     (add-to-list 'major-mode-remap-alist mapping))
   :config
   (gh-setup-install-grammars)
+  (setq typescript-ts-mode-indent-offset 2)
+  (setq treesit-font-lock-level 2)
+  (push '(tsx-ts-mode . typescript-ts-mode-indent-offset) lsp--formatting-indent-alist)
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))  
   ;; Do not forget to customize Combobulate to your liking:
   ;;
   ;;  M-x customize-group RET combobulate RET
@@ -483,7 +480,8 @@ The DWIM behaviour of this command is as follows:
     :hook ((prog-mode . combobulate-mode))
     ;; Amend this to the directory where you keep Combobulate's source
     ;; code.
-    ))
+    )
+  )
 
 (use-package
   python
@@ -497,14 +495,17 @@ The DWIM behaviour of this command is as follows:
     (lsp-no-code-actions
      (when (called-interactively-p 'any)
        (lsp--info "source.fixAll action not available")))))
-  :hook ((lsp-mode . (lambda ()
-                       (add-hook 'before-save-hook 'lsp-fix-all nil t)
-                       (add-hook 'before-save-hook 'lsp-organize-imports nil t)
-                       (add-hook 'before-save-hook 'lsp-format-buffer nil t)))))
+  :hook ((before-save . lsp-fix-all)
+         (before-save . lsp-organize-imports)
+         (before-save . lsp-format-buffer)))
+
+(use-package python-pytest)
+(use-package uv-mode
+  :hook (python-mode . uv-mode-auto-activate-hook))
 (use-package
-  lsp-pyright
-  :after lsp-mode
-  :custom (lsp-pyright-langserver-command "pyright")
+	lsp-pyright
+	:after lsp-mode
+	:custom (lsp-pyright-langserver-command "pyright")
   :hook (python-ts-mode . (lambda ()
                             (require 'lsp-pyright))))
 
@@ -514,30 +515,58 @@ The DWIM behaviour of this command is as follows:
   (setq yaml-indent-offset 2)
   (setq lsp-yaml-format-enable nil))
 
-(use-package yaml-pro
-  :after yaml-ts-mode
-  :preface
-  (defun gh-yaml-format-on-save ()
-      (yaml-pro-format))
-  :hook (yaml-ts-mode . (lambda ()
-                          (add-hook 'before-save-hook 'gh-yaml-format-on-save nil t))))
-
 (use-package
   markdown-mode
   :mode ("README\\.md\\.'" . gfm-mode)
   :init (setq markdown-command "pandoc"))
-
+(use-package impatient-mode)
 (use-package
   dockerfile-mode)
 
-(use-package hcl-mode)
-;;(use-package copilot
-;;  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-;;  :hook ((prog-mode . copilot-mode))
-;;  :bind (:map copilot-mode-map
-;;              ("<C-return>" . copilot-accept-completion)))
+(use-package go-mode)
+
+(use-package jest-test-mode 
+  :ensure t 
+  :commands jest-test-mode
+  :hook (typescript-mode js-mode typescript-tsx-mode))
+
+(use-package eat
+  :straight (:type git
+       :host codeberg
+       :repo "akib/emacs-eat"
+       :files ("*.el" ("term" "term/*.el") "*.texi"
+	       "*.ti" ("terminfo/e" "terminfo/e/*")
+	       ("terminfo/65" "terminfo/65/*")
+	       ("integration" "integration/*")
+	       (:exclude ".dir-locals.el" "*-tests.el"))))
+
+(use-package shell-maker
+  :ensure t)
+(use-package acp
+  :straight (:type git
+             :host github
+             :repo "xenodium/acp.el"))
+
+(use-package agent-shell
+  :straight (:type git
+                   :host github
+                   :repo "xenodium/agent-shell")
+  :config
+   (setq agent-shell-anthropic-authentication
+         (agent-shell-anthropic-make-authentication :login t))
+   (setq agent-shell-anthropic-claude-environment
+      (agent-shell-make-environment-variables
+       "ANTHROPIC_MODEL" "opus"
+       "ANTHROPIC_SMALL_FAST_MODEL" "sonnet"))
+  )
 
 
+(use-package claude-code-ide
+  :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
+  :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
+  :config
+  (claude-code-ide-emacs-tools-setup)
+  (setq claude-code-ide-terminal-backend 'eat))
 
 ;;; Tools
 (use-package kubernetes
@@ -546,61 +575,42 @@ The DWIM behaviour of this command is as follows:
   (setq kubernetes-poll-frequency 3600  ;
         kubernetes-redraw-frequency 3600))
 
+(use-package just-mode)
 
 ;; org-mode
-(use-package org
-  :mode (("\\.org$" . org-mode))
-  :config
-  (setq org-agenda-files '("~/org"))
-  (setq org-src-fontify-natively t)
-  (setq org-return-follows-link  t)
-  (setq org-hide-emphasis-markers t)
-  (when window-system
-    (progn
-      (let* ((variable-tuple
-              (cond ((x-list-fonts "ETBembo")         '(:font "ETBembo"))
-                    ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
-                    ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
-                    ((x-list-fonts "Verdana")         '(:font "Verdana"))
-                    ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
-                    (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
-             (base-font-color     (face-foreground 'default nil 'default))
-             (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
+(setq org-agenda-files '("~/org"))
+(setq org-return-follows-link  t)
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+(add-hook 'org-mode-hook 'org-indent-mode)
+(setq org-hide-emphasis-markers t)
+(add-hook 'org-mode-hook 'visual-line-mode)
+(let* ((variable-tuple
+        (cond ((x-list-fonts "ETBembo")         '(:font "ETBembo"))
+              ((x-list-fonts "Source Sans Pro") '(:font "Source Sans Pro"))
+              ((x-list-fonts "Lucida Grande")   '(:font "Lucida Grande"))
+              ((x-list-fonts "Verdana")         '(:font "Verdana"))
+              ((x-family-fonts "Sans Serif")    '(:family "Sans Serif"))
+              (nil (warn "Cannot find a Sans Serif Font.  Install Source Sans Pro."))))
+       (base-font-color     (face-foreground 'default nil 'default))
+       (headline           `(:inherit default :weight bold :foreground ,base-font-color)))
 
-        (custom-theme-set-faces
-         'user
-         `(org-level-8 ((t (,@headline ,@variable-tuple))))
-         `(org-level-7 ((t (,@headline ,@variable-tuple))))
-         `(org-level-6 ((t (,@headline ,@variable-tuple))))
-         `(org-level-5 ((t (,@headline ,@variable-tuple))))
-         `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
-         `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
-         `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
-         `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
-         `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil))))))))
-  :hook
-  ((org-mode . org-indent-mode)
-   (org-mode . visual-line-mode)))
-
+  (custom-theme-set-faces
+   'user
+   `(org-level-8 ((t (,@headline ,@variable-tuple))))
+   `(org-level-7 ((t (,@headline ,@variable-tuple))))
+   `(org-level-6 ((t (,@headline ,@variable-tuple))))
+   `(org-level-5 ((t (,@headline ,@variable-tuple))))
+   `(org-level-4 ((t (,@headline ,@variable-tuple :height 1.1))))
+   `(org-level-3 ((t (,@headline ,@variable-tuple :height 1.2))))
+   `(org-level-2 ((t (,@headline ,@variable-tuple :height 1.3))))
+   `(org-level-1 ((t (,@headline ,@variable-tuple :height 1.5))))
+   `(org-document-title ((t (,@headline ,@variable-tuple :height 1.6 :underline nil))))))
 
 
 (use-package ob-typescript)
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((typescript . t)
-   (python . t)))
-   
+   ))
 (use-package just-mode)
-
-
-(use-package aidermacs
-  :bind (("C-c a" . aidermacs-transient-menu))
-  :config
-  ; Set API_KEY in .bashrc, that will automatically picked up by aider or in elisp
-  (setenv "OLLAMA_API_BASE" "http://127.0.0.1:11434")
-  (setenv "OLLAMA_CONTEXT_LENGTH" "8192")
-
-  :custom
-  ; See the Configuration section below
-  (aidermacs-use-architect-mode t)
-  (aidermacs-default-model "ollama_chat/deepseek-r1"))
+(put 'downcase-region 'disabled nil)
