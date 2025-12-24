@@ -356,65 +356,26 @@ The DWIM behaviour of this command is as follows:
   :bind (("C-x g" . magit-status))
   :custom (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-(use-package
-  lsp-mode
-  :init
-  (setq lsp-keymap-prefix "C-c l" lsp-use-plists t)
-  (defun my/lsp-mode-setup-completion()
-    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
-          '(orderless))) ;; Configure orderless
-  :hook ((js-ts-mode . lsp-deferred)
-         (typescript-ts-mode . lsp-deferred)
-         (tsx-ts-mode . lsp-deferred)
-         (python-ts-mode . lsp-deferred)
-         (sql-ts-mode . lsp-deferred)
-         (yaml-ts-mode . lsp-deferred)
-         (lsp-completion-mode . my/lsp-mode-setup-completion))
-  :commands (lsp lsp-deferred)
-  :config (setq lsp-idle-delay 0.500)
-  (add-to-list 'lsp-file-watch-ignored-directories "\\.pyenv\\/")
+(use-package eglot
+  :ensure nil
+  :straight (:type built-in)
+  :hook ((js-ts-mode . eglot-ensure)
+         (typescript-ts-mode . eglot-ensure)
+         (tsx-ts-mode . eglot-ensure)
+         (python-ts-mode . eglot-ensure)
+         (yaml-ts-mode . eglot-ensure))
   :custom
-  (lsp-enable-folding nil)
-  (lsp-enable-links nil)
-  (lsp-enable-snippet nil)
-  (lsp-completion-provider :none)
-  (lsp-treemacs-sync-mode 1)
-  (lsp-completion-default-behaviour :insert)
-  (defun lsp-set-cfg ()
-    (let ((lsp-cfg `(:yaml (:tabSize 2))))
-
-      (lsp--set-configuration lsp-cfg)))
-
-  (add-hook 'lsp-after-initialize-hook 'lsp-set-cfg)
+  (eglot-autoshutdown t)
+  (eglot-send-changes-idle-time 0.5)
   :config
-  (lsp-register-client
-   (make-lsp-client :new-connection (lsp-stdio-connection "pyrefly-language-server")
-                    :activation-fn (lsp-activate-on "python")
-                    :server-id 'pyrefly)))
+  ;; YAML configuration
+  (add-to-list 'eglot-server-programs
+               '(yaml-ts-mode . ("yaml-language-server" "--stdio")))
+  (add-to-list 'eglot-server-programs
+               '((python-ts-mode python-mode) . ("ty" "server" )))
+  (add-to-list 'auto-mode-alist '("/uv\\.lock\\'" . toml-ts-mode)))
 
 
-(use-package
-  lsp-ui
-  :after lsp-mode
-  :commands lsp-ui-mode
-  :config (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
-  :custom
-  (lsp-ui-doc-position :top)
-  (lsp-ui-doc-side :right))
-
-(use-package consult-lsp
-  :config (define-key lsp-mode-map [remap xref-find-apropos] #'consult-lsp-symbols))
-
-
-(use-package
-  dap-mode
-  :config
-  (setq dap-auto-configure-features '(sessions locals controls tooltip))
-  (require 'dap-python)
-  (setq dap-python-debugger 'debugpy)
-  :hook ((python-mode . dap-mode)
-         (python-mode . dap-ui-mode)))
 
 (use-package treesit
   :straight (:type built-in)
@@ -460,8 +421,7 @@ The DWIM behaviour of this command is as follows:
   (gh-setup-install-grammars)
   (setq typescript-ts-mode-indent-offset 2)
   (setq treesit-font-lock-level 2)
-  (push '(tsx-ts-mode . typescript-ts-mode-indent-offset) lsp--formatting-indent-alist)
-  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))  
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
   ;; Do not forget to customize Combobulate to your liking:
   ;;
   ;;  M-x customize-group RET combobulate RET
@@ -485,35 +445,24 @@ The DWIM behaviour of this command is as follows:
 
 (use-package
   python
-  :after lsp-mode
+  :after eglot
   :ensure flycheck
   :preface
-  (defun lsp-fix-all ()
+  (defun eglot-format-buffer-on-save ()
+    (add-hook 'before-save-hook #'eglot-format-buffer -10 t))
+  (defun eglot-organize-imports ()
     (interactive)
-    (condition-case nil
-      (lsp-execute-code-action-by-kind "source.fixAll")
-    (lsp-no-code-actions
-     (when (called-interactively-p 'any)
-       (lsp--info "source.fixAll action not available")))))
-  :hook ((before-save . lsp-fix-all)
-         (before-save . lsp-organize-imports)
-         (before-save . lsp-format-buffer)))
+    (eglot-code-actions nil nil "source.organizeImports" t))
+  :hook ((python-ts-mode . eglot-format-buffer-on-save)
+         (before-save . eglot-organize-imports)))
 
 (use-package python-pytest)
 (use-package uv-mode
   :hook (python-mode . uv-mode-auto-activate-hook))
-(use-package
-	lsp-pyright
-	:after lsp-mode
-	:custom (lsp-pyright-langserver-command "pyright")
-  :hook (python-ts-mode . (lambda ()
-                            (require 'lsp-pyright))))
-
 
 (use-package yaml-ts-mode
   :config
-  (setq yaml-indent-offset 2)
-  (setq lsp-yaml-format-enable nil))
+  (setq yaml-indent-offset 2))
 
 (use-package
   markdown-mode
@@ -525,8 +474,8 @@ The DWIM behaviour of this command is as follows:
 
 (use-package go-mode)
 
-(use-package jest-test-mode 
-  :ensure t 
+(use-package jest-test-mode
+  :ensure t
   :commands jest-test-mode
   :hook (typescript-mode js-mode typescript-tsx-mode))
 
