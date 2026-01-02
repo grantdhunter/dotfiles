@@ -25,15 +25,15 @@
          (typescript-ts-mode . eglot-ensure)
          (tsx-ts-mode . eglot-ensure)
          (python-ts-mode . eglot-ensure)
-         (yaml-ts-mode . eglot-ensure))
+         (yaml-ts-mode . eglot-ensure)
+         (go-ts-mode . eglot-ensure))
   :custom
   (eglot-autoshutdown t)
   (eglot-send-changes-idle-time 0.5)
   :config
   (add-to-list 'eglot-server-programs
-               '(python-ts-mode . ("pyrefly-language-server")))
-  (add-to-list 'eglot-server-programs
                '(yaml-ts-mode . ("yaml-language-server" "--stdio"))))
+
 
 ;; DAP mode - debugger
 (use-package dap-mode
@@ -84,7 +84,7 @@
   (gh-setup-install-grammars)
   (setq typescript-ts-mode-indent-offset 2)
   (setq treesit-font-lock-level 2)
-  (push '(tsx-ts-mode . typescript-ts-mode-indent-offset) lsp--formatting-indent-alist)
+
   (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
 
   ;; Combobulate for structured editing

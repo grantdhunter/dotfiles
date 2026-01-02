@@ -30,6 +30,9 @@
   :config
   (setq dired-subtree-use-backgrounds nil))
 
+;;; Project
+(use-package projectile)
+
 ;;; Terminal - Eat
 (use-package eat
   :straight (:type git
@@ -57,17 +60,23 @@
                    :host github
                    :repo "xenodium/acp.el"))
 
+
 (use-package agent-shell
-  :straight (:type git
-                   :host github
-                   :repo "xenodium/agent-shell")
-  :config
-  (setq agent-shell-anthropic-authentication
-        (agent-shell-anthropic-make-authentication :login t))
-  (setq agent-shell-anthropic-claude-environment
-        (agent-shell-make-environment-variables
-         "ANTHROPIC_MODEL" "opus"
-         "ANTHROPIC_SMALL_FAST_MODEL" "sonnet")))
+    :ensure-system-package
+    ;; Add agent installation configs here
+    ((claude . "curl -fsSL https://claude.ai/install.sh | bash")
+     (claude-code-acp . "npm install -g @zed-industries/claude-code-acp"))
+    :custom
+    (agent-shell-file-completion-enabled t)
+    (agent-shell-preferred-agent-config (agent-shell-anthropic-make-claude-code-config))
+    (agent-shell-anthropic-authentication
+     (agent-shell-anthropic-make-authentication :login t))
+    (agent-shell-display-action '((display-buffer-in-side-window)
+                                 (side . right)
+                                 (slot . 0)
+                                 (window-width . 0.4)
+                                 (dedicated . t)
+                                 (window-parameters . ((no-delete-other-windows . t))))))
 
 (use-package claude-code-ide
   :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
@@ -76,5 +85,5 @@
   (claude-code-ide-emacs-tools-setup)
   (setq claude-code-ide-terminal-backend 'eat))
 
-(provide 'gh-tools)
+    (provide 'gh-tools)
 ;;; gh-tools.el ends here

@@ -15,13 +15,17 @@
   (defun eglot-organize-imports ()
     (interactive)
     (eglot-code-actions nil nil "source.organizeImports" t))
+  :config
+  (add-to-list 'eglot-server-programs
+               '((python-ts-mode python-mode)
+                 . ("ty" "server")))
   :hook ((python-ts-mode . eglot-format-buffer-on-save)
          (before-save . eglot-organize-imports)))
 
 (use-package python-pytest)
 
 (use-package uv-mode
-  :hook (python-mode . uv-mode-auto-activate-hook))
+  :hook (python-ts-mode . uv-mode-auto-activate-hook))
 
 (use-package lsp-pyright
   :after lsp-mode
@@ -29,10 +33,6 @@
   :hook (python-ts-mode . (lambda ()
                             (require 'lsp-pyright))))
 
-(use-package lsp-python-ty
-  :after lsp-mode
-  :hook (python-ts-mode . (lambda ()
-                            (require 'lsp-python-ty))))
 
 ;;; YAML
 (use-package yaml-ts-mode
@@ -51,13 +51,14 @@
   :mode ("README\\.md\\.'" . gfm-mode)
   :init (setq markdown-command "pandoc"))
 
-(use-package impatient-mode)
+
 
 ;;; Docker
 (use-package dockerfile-mode)
 
 ;;; Go
-(use-package go-mode)
+(use-package go-mode
+  :hook (go-ts-mode . eglot-format-buffer-on-save))
 
 ;;; Justfiles
 (use-package just-mode)
