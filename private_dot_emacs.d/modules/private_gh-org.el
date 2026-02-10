@@ -2,6 +2,9 @@
 
 ;;; Commentary:
 ;; Org-mode settings, appearance, and babel configuration.
+
+;; Org is loaded early in gh-packages.el to prevent version mismatch
+
 ;; Basic org settings
 (setq org-agenda-files '("~/org"))
 (setq org-return-follows-link t)

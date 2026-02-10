@@ -52,8 +52,7 @@
         kubernetes-redraw-frequency 3600))
 
 ;;; AI assistants
-(use-package shell-maker
-  :ensure t)
+(use-package shell-maker)
 
 (use-package acp
   :straight (:type git
@@ -62,28 +61,28 @@
 
 
 (use-package agent-shell
-    :ensure-system-package
-    ;; Add agent installation configs here
-    ((claude . "curl -fsSL https://claude.ai/install.sh | bash")
-     (claude-code-acp . "npm install -g @zed-industries/claude-code-acp"))
     :custom
     (agent-shell-file-completion-enabled t)
-    (agent-shell-preferred-agent-config (agent-shell-anthropic-make-claude-code-config))
+    (agent-shell-preferred-agent-config (agent-shell-mistral-make-config))
+
     (agent-shell-anthropic-authentication
      (agent-shell-anthropic-make-authentication :login t))
-    (agent-shell-display-action '((display-buffer-in-side-window)
+
+    (agent-shell-mistral-authentication
+     (agent-shell-mistral-make-authentication
+      :api-key (lambda ()
+                 (string-trim
+                    (shell-command-to-string "source ~/.vibe/.env; echo $MISTRAL_API_KEY")))))
+
+
+     (agent-shell-display-action '((display-buffer-in-side-window)
                                  (side . right)
                                  (slot . 0)
                                  (window-width . 0.4)
                                  (dedicated . t)
                                  (window-parameters . ((no-delete-other-windows . t))))))
 
-(use-package claude-code-ide
-  :straight (:type git :host github :repo "manzaltu/claude-code-ide.el")
-  :bind ("C-c C-'" . claude-code-ide-menu)
-  :config
-  (claude-code-ide-emacs-tools-setup)
-  (setq claude-code-ide-terminal-backend 'eat))
+
 
     (provide 'gh-tools)
 ;;; gh-tools.el ends here

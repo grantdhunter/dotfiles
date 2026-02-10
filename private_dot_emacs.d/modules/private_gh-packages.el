@@ -23,5 +23,9 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
+;; Load Org early to prevent version mismatch
+(straight-use-package 'org)
+(require 'org)  ;; Force immediate loading
+
 (provide 'gh-packages)
 ;;; gh-packages.el ends here
