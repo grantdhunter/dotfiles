@@ -6,30 +6,31 @@
 ;;; Code:
 
 ;;; Python
-(use-package python
-  :after eglot
+(use-package
+  python
+  :after lsp-mode
   :ensure flycheck
   :preface
-  (defun eglot-format-buffer-on-save ()
-    (add-hook 'before-save-hook #'eglot-format-buffer -10 t))
-  (defun eglot-organize-imports ()
+  (defun lsp-fix-all ()
     (interactive)
-    (eglot-code-actions nil nil "source.organizeImports" t))
-  :config
-  (add-to-list 'eglot-server-programs
-               '((python-ts-mode python-mode)
-                 . ("ty" "server")))
-  :hook ((python-ts-mode . eglot-format-buffer-on-save)
-         (before-save . eglot-organize-imports)))
+    (condition-case nil
+      (lsp-execute-code-action-by-kind "source.fixAll")
+    (lsp-no-code-actions
+     (when (called-interactively-p 'any)
+       (lsp--info "source.fixAll action not available")))))
+  :hook ((before-save . lsp-fix-all)
+         (before-save . lsp-organize-imports)
+         (before-save . lsp-format-buffer)))
 
 (use-package python-pytest)
 
 (use-package uv-mode
   :hook (python-ts-mode . uv-mode-auto-activate-hook))
 
-(use-package lsp-pyright
-  :after lsp-mode
-  :custom (lsp-pyright-langserver-command "pyright")
+(use-package
+	lsp-pyright
+	:after lsp-mode
+	:custom (lsp-pyright-langserver-command "pyright")
   :hook (python-ts-mode . (lambda ()
                             (require 'lsp-pyright))))
 
@@ -57,8 +58,7 @@
 (use-package dockerfile-mode)
 
 ;;; Go
-(use-package go-mode
-  :hook (go-ts-mode . eglot-format-buffer-on-save))
+(use-package go-mode)
 
 ;;; Justfiles
 (use-package just-mode)

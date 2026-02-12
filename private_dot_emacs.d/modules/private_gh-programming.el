@@ -17,22 +17,66 @@
   :bind (("C-x g" . magit-status))
   :custom (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-;; Eglot - LSP client
-(use-package eglot
-  :ensure nil
-  :straight (:type built-in)
-  :hook ((js-ts-mode . eglot-ensure)
-         (typescript-ts-mode . eglot-ensure)
-         (tsx-ts-mode . eglot-ensure)
-         (python-ts-mode . eglot-ensure)
-         (yaml-ts-mode . eglot-ensure)
-         (go-ts-mode . eglot-ensure))
+;; LSP Mode - LSP client
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :init
+   (defun gh/lsp-mode-setup-completion()
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+          '(orderless))) ;; Configure orderless
+
+
+   (defun lsp-ui-sideline--compute-text-width (text-with-properties &optional window)
+     (let ((window (or window (selected-window)))
+           (remapping-alist face-remapping-alist))
+       (with-temp-buffer
+         (setq-local face-remapping-alist remapping-alist)
+         (set-window-buffer window (current-buffer))
+         (insert text-with-properties)
+         (car (window-text-pixel-size)))))
+   
+   
+  :hook ((js-ts-mode . lsp-deferred)
+         (typescript-ts-mode . lsp-deferred)
+         (tsx-ts-mode . lsp-deferred)
+         (python-ts-mode . lsp-deferred)
+         (yaml-ts-mode . lsp-deferred)
+         (go-ts-mode . lsp-deferred)
+         (lsp-completion-mode . gh/lsp-mode-setup-completion))
+  :config 
+  (add-to-list 'lsp-file-watch-ignored-directories "\\.pyenv\\/")
   :custom
-  (eglot-autoshutdown t)
-  (eglot-send-changes-idle-time 0.5)
-  :config
-  (add-to-list 'eglot-server-programs
-               '(yaml-ts-mode . ("yaml-language-server" "--stdio"))))
+  (lsp-keymap-prefix "C-c l")
+  (lsp-idle-delay 0.5)
+  (lsp-enable-file-watchers t)
+  (lsp-file-watch-threshold 2000)
+  (lsp-enable-folding nil)
+  (lsp-enable-links nil)
+  (lsp-enable-snippet nil)
+  (lsp-completion-provider :none)
+  (lsp-treemacs-sync-mode 1))
+
+;; LSP UI - UI enhancements for LSP
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :custom
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-position 'at-point)
+  (lsp-ui-sideline-enable t)
+  (lsp-ui-sideline-show-diagnostics t)
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-sideline-show-code-actions t)
+  :config (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
+
+;; LSP consult 
+(use-package consult-lsp
+  :config (define-key lsp-mode-map [remap xref-find-apropos] #'consult-lsp-symbols))
+
+;; LSP Treemacs integration
+(use-package lsp-treemacs
+  :after lsp-mode
+  :commands lsp-treemacs-errors-list)
 
 
 ;; DAP mode - debugger
