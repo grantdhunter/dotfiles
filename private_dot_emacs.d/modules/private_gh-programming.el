@@ -17,6 +17,18 @@
   :bind (("C-x g" . magit-status))
   :custom (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
+;;; git diff
+(use-package difftastic
+  :after magit
+  :straight (:type git
+                   :host github
+                   :repo "emacsmirror/difftastic")
+  :config
+  (transient-append-suffix 'magit-diff '(-1 -1)
+    [("D" "Difftastic diff (dwim)" difftastic-magit-diff)
+     ("S" "Difftastic show" difftastic-magit-show)])
+  )
+
 ;; LSP Mode - LSP client
 (use-package lsp-mode
   :commands (lsp lsp-deferred)
@@ -25,17 +37,10 @@
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))) ;; Configure orderless
 
+   (defun lsp-ui-sideline--compute-height ()
+     1)
 
-   (defun lsp-ui-sideline--compute-text-width (text-with-properties &optional window)
-     (let ((window (or window (selected-window)))
-           (remapping-alist face-remapping-alist))
-       (with-temp-buffer
-         (setq-local face-remapping-alist remapping-alist)
-         (set-window-buffer window (current-buffer))
-         (insert text-with-properties)
-         (car (window-text-pixel-size)))))
-   
-   
+
   :hook ((js-ts-mode . lsp-deferred)
          (typescript-ts-mode . lsp-deferred)
          (tsx-ts-mode . lsp-deferred)
@@ -43,7 +48,7 @@
          (yaml-ts-mode . lsp-deferred)
          (go-ts-mode . lsp-deferred)
          (lsp-completion-mode . gh/lsp-mode-setup-completion))
-  :config 
+  :config
   (add-to-list 'lsp-file-watch-ignored-directories "\\.pyenv\\/")
   :custom
   (lsp-keymap-prefix "C-c l")
@@ -69,7 +74,7 @@
   :config (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
   (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
 
-;; LSP consult 
+;; LSP consult
 (use-package consult-lsp
   :config (define-key lsp-mode-map [remap xref-find-apropos] #'consult-lsp-symbols))
 
@@ -107,7 +112,8 @@
                (toml . ("https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1"))
                (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src"))
                (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src"))
-               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))))
+               (yaml . ("https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0"))
+               (turtle "https://github.com/GordianDziwis/tree-sitter-turtle")))
       (add-to-list 'treesit-language-source-alist grammar)
       (unless (treesit-language-available-p (car grammar))
         (treesit-install-language-grammar (car grammar)))))
@@ -122,21 +128,26 @@
              (go-mode . go-ts-mode)
              (css-mode . css-ts-mode)
              (json-mode . json-ts-mode)
-             (js-json-mode . json-ts-mode)))
+             (js-json-mode . json-ts-mode)
+             (yaml-mode . yaml-ts-mode)))
     (add-to-list 'major-mode-remap-alist mapping))
   :config
   (gh-setup-install-grammars)
   (setq typescript-ts-mode-indent-offset 2)
   (setq treesit-font-lock-level 2)
 
-  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode)))
 
   ;; Combobulate for structured editing
-  (use-package combobulate
-    :straight (:type git :repo "mickeynp/combobulate" :nonrecursive t)
-    :custom
-    (combobulate-key-prefix "C-c o")
-    :hook ((prog-mode . combobulate-mode))))
+(use-package combobulate
+  :straight (:type git :repo "mickeynp/combobulate" :nonrecursive t)
+  :custom
+  (combobulate-key-prefix "C-c o")
+  :hook ((prog-mode . combobulate-mode)))
 
+(use-package treesit-fold
+  :straight (treesit-fold :type git :host github :repo "emacs-tree-sitter/treesit-fold"))
+(use-package treesit-fold-indicators
+:straight (treesit-fold-indicators :type git :host github :repo "emacs-tree-sitter/treesit-fold"))
 (provide 'gh-programming)
 ;;; gh-programming.el ends here

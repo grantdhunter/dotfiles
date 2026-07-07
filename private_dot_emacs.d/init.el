@@ -21,3 +21,4 @@
 (require 'gh-org)         ; Org-mode configuration
 
 ;;; init.el ends here
+(put 'upcase-region 'disabled nil)

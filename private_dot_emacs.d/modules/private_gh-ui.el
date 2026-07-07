@@ -32,6 +32,18 @@
                   (set-frame-size (selected-frame) 150 48)))
     (load-theme 'material t)))
 
+(defun gh/server-auto-dark (frame)
+  (with-selected-frame frame
+    (when (display-graphic-p)
+      (auto-dark-mode 1)
+      ;; Remove hook so it only runs once
+      (remove-hook 'after-make-frame-functions #'gh/server-auto-dark))))
+
+(use-package auto-dark
+   :config
+  (setq auto-dark-themes '((material) (material-light)))
+  (add-hook 'after-make-frame-functions #'gh/server-auto-dark))
+
 ;; Nerd icons
 (use-package nerd-icons)
 

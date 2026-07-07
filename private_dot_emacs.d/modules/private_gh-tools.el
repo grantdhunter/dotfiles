@@ -30,6 +30,7 @@
   :config
   (setq dired-subtree-use-backgrounds nil))
 
+
 ;;; Project
 (use-package projectile)
 
@@ -74,7 +75,9 @@
                  (string-trim
                     (shell-command-to-string "source ~/.vibe/.env; echo $MISTRAL_API_KEY")))))
 
-
+    (setq agent-shell-goose-authentication
+          (agent-shell-make-goose-authentication :openai-api-key "your-openai-api-key-here"))
+    
      (agent-shell-display-action '((display-buffer-in-side-window)
                                  (side . right)
                                  (slot . 0)

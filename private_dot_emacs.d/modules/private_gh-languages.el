@@ -30,9 +30,10 @@
 (use-package
 	lsp-pyright
 	:after lsp-mode
-	:custom (lsp-pyright-langserver-command "pyright")
+	:custom (lsp-pyright-langserver-command "basedpyright")
   :hook (python-ts-mode . (lambda ()
-                            (require 'lsp-pyright))))
+                            (require 'lsp-pyright)
+                            (lsp-deferred))))
 
 
 ;;; YAML
